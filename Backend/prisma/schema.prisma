@@ -1,0 +1,81 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+
+enum Role {
+    ADMIN
+    FACULTY
+    STUDENT
+}
+
+enum PatentType {
+    UTILITY
+    DESIGN
+}
+
+enum PatentStatus {
+    PUBLISHED 
+    GRANTED
+}
+
+
+
+model User {
+  id       Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role
+
+  patents   Patent[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+
+model Patent{
+  
+  id         Int        @id @default(autoincrement())
+  
+  applicationNo String @unique
+  
+  status      PatentStatus @default(PUBLISHED)
+  
+  inventorName String @db.Text
+  
+  patentTitle       String @db.Text
+  
+  applicantName String @db.Text
+  
+  filedDate   DateTime
+  
+  publicationDate DateTime
+  
+  publicationNo String @unique
+  
+  institueAffiliation String @db.Text
+  
+  driveLink   String @db.Text
+  
+  year        Int
+  
+  patentType PatentType
+  
+  patentSession     String @db.Text
+  
+  weblink     String @db.Text
+  
+  country     String @db.Text 
+  
+  userId      Int
+  user        User       @relation(fields: [userId], references: [id])
+
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
