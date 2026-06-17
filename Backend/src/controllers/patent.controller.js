@@ -31,7 +31,8 @@ const addPatent = async (req, res) => {
             patentType,
             patentSession,
             weblink,
-            country
+            country,
+            userId
         } = req.body;
         if (
             !applicationNo ||
@@ -47,7 +48,8 @@ const addPatent = async (req, res) => {
             !patentType ||
             !patentSession ||
             !weblink ||
-            !country
+            !country ||
+            !userId
         ) {
             return res.status(400).json({
                 success: false,
@@ -61,16 +63,17 @@ const addPatent = async (req, res) => {
                 inventorName,
                 patentTitle,
                 applicantName,
-                filedDate,
-                publicationDate,
+                filedDate: new Date(filedDate),
+                publicationDate: new Date(publicationDate),
                 publicationNo,
                 institueAffiliation,
                 driveLink,
-                year,
+                year: parseInt(year),
                 patentType,
                 patentSession,
                 weblink,
-                country
+                country,
+                userId: parseInt(userId)
             }
         });
         res.status(201).json({
@@ -109,6 +112,10 @@ const getPatentById = async (req, res) => {
                 message: "Patent not found"
             });
         }
+        return res.status(200).json({
+            success: true,
+            data: patent
+        });
     }catch(error){
         res.status(500).json({
             success: false,
