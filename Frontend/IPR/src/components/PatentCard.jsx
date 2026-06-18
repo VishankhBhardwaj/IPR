@@ -1,0 +1,71 @@
+import React from 'react';
+import { Calendar, User, FileText, Trash2, Globe } from 'lucide-react';
+import Button from './Button';
+import './PatentCard.css';
+
+const PatentCard = ({ patent, onDelete }) => {
+  const getStatusColor = (status) => {
+    switch (status?.toLowerCase()) {
+      case 'published': return 'badge-success';
+      case 'filed': return 'badge-warning';
+      case 'rejected': return 'badge-danger';
+      default: return 'badge-primary';
+    }
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleDateString();
+  };
+
+  return (
+    <div className="patent-card clean-panel animate-fade-in">
+      <div className="patent-header">
+        <h3 className="patent-title">{patent.patentTitle}</h3>
+        <span className={`badge ${getStatusColor(patent.status)}`}>
+          {patent.status || 'Unknown'}
+        </span>
+      </div>
+      
+      <div className="patent-body">
+        <div className="info-row">
+          <FileText size={16} className="info-icon" />
+          <span><strong>App No:</strong> {patent.applicationNo}</span>
+        </div>
+        <div className="info-row">
+          <User size={16} className="info-icon" />
+          <span><strong>Inventor:</strong> {patent.inventorName}</span>
+        </div>
+        <div className="info-row">
+          <Calendar size={16} className="info-icon" />
+          <span><strong>Filed:</strong> {formatDate(patent.filedDate)}</span>
+        </div>
+        <div className="info-row">
+          <Globe size={16} className="info-icon" />
+          <span><strong>Country:</strong> {patent.country || 'N/A'}</span>
+        </div>
+      </div>
+
+      <div className="patent-footer">
+        {patent.weblink ? (
+          <a href={patent.weblink} target="_blank" rel="noreferrer" className="weblink">
+            View Source
+          </a>
+        ) : (
+          <span className="no-link">No link available</span>
+        )}
+        
+        <Button 
+          variant="danger" 
+          size="sm" 
+          onClick={() => onDelete(patent.id)}
+          title="Delete Patent"
+        >
+          <Trash2 size={16} />
+        </Button>
+      </div>
+    </div>
+  );
+};
+
+export default PatentCard;
