@@ -30,6 +30,7 @@
   margin: 0;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -77,4 +78,14 @@
   font-size: 0.875rem;
   color: var(--text-tertiary);
   font-style: italic;
+}
+
+.patent-title a {
+  color: inherit;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.patent-title a:hover {
+  color: var(--accent-primary);
 }

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getAllPatents, deletePatent } from '../api/patentApi';
 import PatentCard from '../components/PatentCard';
+import Button from '../components/Button';
 import './Dashboard.css';
 
 const Dashboard = () => {
@@ -111,10 +112,10 @@ const Dashboard = () => {
             </select>
           </div>
           <div className="filter-actions">
-            <button type="submit" className="btn-primary">Apply Filters</button>
-            <button 
+            <Button type="submit" variant="primary">Apply Filters</Button>
+            <Button 
               type="button" 
-              className="btn-secondary"
+              variant="outline"
               onClick={() => {
                 const resetFilters = { year: '', applicationNo: '', status: '', patentType: '' };
                 setFilters(resetFilters);
@@ -122,7 +123,7 @@ const Dashboard = () => {
               }}
             >
               Clear
-            </button>
+            </Button>
           </div>
         </form>
       </div>

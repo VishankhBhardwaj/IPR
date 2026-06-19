@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Calendar, User, FileText, Trash2, Globe } from 'lucide-react';
 import Button from './Button';
 import './PatentCard.css';
@@ -21,7 +22,9 @@ const PatentCard = ({ patent, onDelete }) => {
   return (
     <div className="patent-card clean-panel animate-fade-in">
       <div className="patent-header">
-        <h3 className="patent-title">{patent.patentTitle}</h3>
+        <h3 className="patent-title">
+          <Link to={`/patent/${patent.id}`}>{patent.patentTitle}</Link>
+        </h3>
         <span className={`badge ${getStatusColor(patent.status)}`}>
           {patent.status || 'Unknown'}
         </span>
@@ -47,13 +50,19 @@ const PatentCard = ({ patent, onDelete }) => {
       </div>
 
       <div className="patent-footer">
-        {patent.weblink ? (
-          <a href={patent.weblink} target="_blank" rel="noreferrer" className="weblink">
-            View Source
-          </a>
-        ) : (
-          <span className="no-link">No link available</span>
-        )}
+        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+          <Link to={`/patent/${patent.id}`} className="weblink" style={{ color: 'var(--accent-primary)' }}>
+            View Details
+          </Link>
+          <span style={{ color: 'var(--border-color)', fontSize: '0.875rem' }}>|</span>
+          {patent.weblink ? (
+            <a href={patent.weblink} target="_blank" rel="noreferrer" className="weblink">
+              View Source
+            </a>
+          ) : (
+            <span className="no-link">No source</span>
+          )}
+        </div>
         
         <Button 
           variant="danger" 

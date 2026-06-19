@@ -6,7 +6,7 @@ import './AddPatentForm.css';
 
 const initialFormState = {
   applicationNo: '',
-  status: 'FILED',
+  status: 'PUBLISHED',
   inventorName: '',
   patentTitle: '',
   applicantName: '',
@@ -99,6 +99,19 @@ const AddPatentForm = () => {
               placeholder="IN2026..."
             />
           </div>
+          
+          <div className="form-group">
+            <label htmlFor="publicationNo">Publication/Grant Number *</label>
+            <input
+              type="text"
+              id="publicationNo"
+              name="publicationNo"
+              value={formData.publicationNo}
+              onChange={handleChange}
+              required
+              placeholder="PUB2026..."
+            />
+          </div>
 
           {/* Row 2 */}
           <div className="form-group">
@@ -114,33 +127,31 @@ const AddPatentForm = () => {
           </div>
 
           <div className="form-group">
-            <label htmlFor="applicantName">Applicant Name</label>
+            <label htmlFor="applicantName">Applicant Name *</label>
             <input
               type="text"
               id="applicantName"
               name="applicantName"
               value={formData.applicantName}
               onChange={handleChange}
+              required
             />
           </div>
 
           {/* Row 3 */}
           <div className="form-group">
-            <label htmlFor="status">Status</label>
-            <select id="status" name="status" value={formData.status} onChange={handleChange}>
-              <option value="FILED">Filed</option>
+            <label htmlFor="status">Status *</label>
+            <select id="status" name="status" value={formData.status} onChange={handleChange} required>
               <option value="PUBLISHED">Published</option>
               <option value="GRANTED">Granted</option>
-              <option value="REJECTED">Rejected</option>
             </select>
           </div>
 
           <div className="form-group">
-            <label htmlFor="patentType">Patent Type</label>
-            <select id="patentType" name="patentType" value={formData.patentType} onChange={handleChange}>
+            <label htmlFor="patentType">Patent Type *</label>
+            <select id="patentType" name="patentType" value={formData.patentType} onChange={handleChange} required>
               <option value="UTILITY">Utility</option>
               <option value="DESIGN">Design</option>
-              <option value="PLANT">Plant</option>
             </select>
           </div>
 
@@ -158,83 +169,90 @@ const AddPatentForm = () => {
           </div>
 
           <div className="form-group">
-            <label htmlFor="publicationDate">Publication Date</label>
+            <label htmlFor="publicationDate">Publication Date *</label>
             <input
               type="date"
               id="publicationDate"
               name="publicationDate"
               value={formData.publicationDate}
               onChange={handleChange}
+              required
             />
           </div>
 
           {/* Row 5 */}
           <div className="form-group">
-            <label htmlFor="institueAffiliation">Institute Affiliation</label>
+            <label htmlFor="institueAffiliation">Institute Affiliation *</label>
             <input
               type="text"
               id="institueAffiliation"
               name="institueAffiliation"
               value={formData.institueAffiliation}
               onChange={handleChange}
+              required
             />
           </div>
 
           <div className="form-group">
-            <label htmlFor="country">Country</label>
+            <label htmlFor="country">Country *</label>
             <input
               type="text"
               id="country"
               name="country"
               value={formData.country}
               onChange={handleChange}
+              required
             />
           </div>
 
           {/* Row 6 */}
           <div className="form-group">
-            <label htmlFor="weblink">Web Link</label>
+            <label htmlFor="weblink">Web Link *</label>
             <input
               type="url"
               id="weblink"
               name="weblink"
               value={formData.weblink}
               onChange={handleChange}
+              required
               placeholder="https://..."
             />
           </div>
 
           <div className="form-group">
-            <label htmlFor="driveLink">Drive Link</label>
+            <label htmlFor="driveLink">Drive Link *</label>
             <input
               type="url"
               id="driveLink"
               name="driveLink"
               value={formData.driveLink}
               onChange={handleChange}
+              required
               placeholder="https://drive.google.com/..."
             />
           </div>
           
           <div className="form-group">
-            <label htmlFor="year">Year</label>
+            <label htmlFor="year">Year *</label>
             <input
               type="number"
               id="year"
               name="year"
               value={formData.year}
               onChange={handleChange}
+              required
             />
           </div>
 
           <div className="form-group">
-            <label htmlFor="patentSession">Session</label>
+            <label htmlFor="patentSession">Session *</label>
             <input
               type="text"
               id="patentSession"
               name="patentSession"
               value={formData.patentSession}
               onChange={handleChange}
+              required
               placeholder="e.g. 2025-26"
             />
           </div>
