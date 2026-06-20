@@ -1,11 +1,14 @@
+import dotenv from "dotenv";
 
+dotenv.config();
 import { PrismaClient } from "@prisma/client";
 import { PrismaMariaDb } from "@prisma/adapter-mariadb";
 
-const password = env("DB_PASSWORD");
+const password = process.env.DB_PASSWORD;
 
 const adapter = new PrismaMariaDb({
   host: "localhost",
+  port: Number(process.env.DB_PORT),
   user: "root",
   password: password,
   database: "ipr_db",

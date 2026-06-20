@@ -2,31 +2,11 @@ const prisma = require("../config/prisma");
 
 const getAllPatents = async (req, res) => {
     try {
-        const { year, applicationNo, status, patentType } = req.query;
-        let where = {};
-        
-        if (year) {
-            where.year = parseInt(year);
-        }
-        if (applicationNo) {
-            where.applicationNo = { contains: applicationNo };
-        }
-        if (status) {
-            where.status = status;
-        }
-        if (patentType) {
-            where.patentType = patentType;
-        }
-
-        const data = await prisma.patent.findMany({
-            where,
-            orderBy: { createdAt: 'desc' } // Optional: order by newest first
-        });
-        
+        const data = await prisma.patent.findMany();
         return res.status(200).json({
             success: true,
             data: data
-        });
+        })
     } catch (error) {
         res.status(500).json({
             success: false,
