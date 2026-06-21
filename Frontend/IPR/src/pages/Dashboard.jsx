@@ -52,8 +52,8 @@ const Dashboard = () => {
       if (
         filters.applicationNo &&
         !(patent.applicationNo || '')
-          .toLowerCase()
-          .includes(filters.applicationNo.toLowerCase())
+          .toUpperCase()
+          .includes(filters.applicationNo.toUpperCase())
       ) {
         return false;
       }
