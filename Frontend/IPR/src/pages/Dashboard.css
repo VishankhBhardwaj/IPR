@@ -25,7 +25,9 @@
   gap: 1.5rem;
 }
 
-.loading-state, .error-state, .empty-state {
+.loading-state,
+.error-state,
+.empty-state {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -66,8 +68,13 @@
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .filters-section {
@@ -124,4 +131,10 @@
 
 .filter-actions button {
   flex: 1;
+}
+
+.filter-count {
+  margin-top: 1rem;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
 }

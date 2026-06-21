@@ -2,8 +2,8 @@ import axios from 'axios';
 
 const API_URL = 'http://localhost:5000/api/patents';
 
-export const getAllPatents = async (filters = {}) => {
-  const response = await axios.get(API_URL, { params: filters });
+export const getAllPatents = async () => {
+  const response = await axios.get(API_URL);
   return response.data;
 };
 
