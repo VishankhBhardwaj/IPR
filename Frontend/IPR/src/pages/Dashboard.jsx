@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { getAllPatents, deletePatent } from '../api/patentApi';
 import PatentCard from '../components/PatentCard';
 import Button from '../components/Button';
 import './Dashboard.css';
 
 const Dashboard = () => {
-  const [patents, setPatents] = useState([]);
+  // Stores the complete, unfiltered dataset fetched once from the API
+  const [allPatents, setAllPatents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [filters, setFilters] = useState({
@@ -15,24 +16,21 @@ const Dashboard = () => {
     patentType: ''
   });
 
+  // Fetch all patents once on mount — no re-fetching on filter changes
   useEffect(() => {
     fetchPatents();
   }, []);
 
-  const fetchPatents = async (currentFilters = filters) => {
+  // Fetches the full patent list from the API (called only once on component mount)
+  const fetchPatents = async () => {
     try {
       setLoading(true);
-      // Clean up empty filters
-      const activeFilters = Object.fromEntries(
-        Object.entries(currentFilters).filter(([_, v]) => v !== '')
-      );
-      
-      const response = await getAllPatents(activeFilters);
+      const response = await getAllPatents();
       // Assume the response structure is { success: true, data: [...] }
       if (response.success) {
-        setPatents(response.data);
+        setAllPatents(response.data);
       } else {
-        setPatents(response); // Fallback in case the array is returned directly
+        setAllPatents(response); // Fallback in case the array is returned directly
       }
       setError(null);
     } catch (err) {
@@ -43,12 +41,38 @@ const Dashboard = () => {
     }
   };
 
+  // Client-side filtering using useMemo — replaces the previous approach of making
+  // a new API call on every filter change. This eliminates redundant network requests
+  // and gives the user instant feedback as they adjust filters.
+  const filteredPatents = useMemo(() => {
+    return allPatents.filter((patent) => {
+      if (filters.year && patent.year !== parseInt(filters.year)) {
+        return false;
+      }
+      if (
+        filters.applicationNo &&
+        !(patent.applicationNo || '')
+          .toLowerCase()
+          .includes(filters.applicationNo.toLowerCase())
+      ) {
+        return false;
+      }
+      if (filters.status && patent.status !== filters.status) {
+        return false;
+      }
+      if (filters.patentType && patent.patentType !== filters.patentType) {
+        return false;
+      }
+      return true;
+    });
+  }, [allPatents, filters]);
+
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this patent?')) {
       try {
         await deletePatent(id);
         // Optimistically update the UI
-        setPatents(patents.filter(p => p.id !== id));
+        setAllPatents(allPatents.filter(p => p.id !== id));
       } catch (err) {
         console.error('Error deleting patent:', err);
         alert('Failed to delete patent.');
@@ -63,37 +87,33 @@ const Dashboard = () => {
         <p className="subtitle">Manage and track all intellectual property registrations.</p>
       </div>
 
+      {/* Filters now update local state only — no form submission or API call needed.
+          Results are computed instantly via the filteredPatents useMemo above. */}
       <div className="filters-section clean-panel">
-        <form 
-          className="filters-form" 
-          onSubmit={(e) => {
-            e.preventDefault();
-            fetchPatents(filters);
-          }}
-        >
+        <div className="filters-form">
           <div className="filter-group">
             <label>Application No.</label>
-            <input 
-              type="text" 
+            <input
+              type="text"
               placeholder="e.g. 202141059"
               value={filters.applicationNo}
-              onChange={(e) => setFilters({...filters, applicationNo: e.target.value})}
+              onChange={(e) => setFilters({ ...filters, applicationNo: e.target.value })}
             />
           </div>
           <div className="filter-group">
             <label>Year</label>
-            <input 
-              type="number" 
+            <input
+              type="number"
               placeholder="e.g. 2024"
               value={filters.year}
-              onChange={(e) => setFilters({...filters, year: e.target.value})}
+              onChange={(e) => setFilters({ ...filters, year: e.target.value })}
             />
           </div>
           <div className="filter-group">
             <label>Status</label>
-            <select 
+            <select
               value={filters.status}
-              onChange={(e) => setFilters({...filters, status: e.target.value})}
+              onChange={(e) => setFilters({ ...filters, status: e.target.value })}
             >
               <option value="">All</option>
               <option value="PUBLISHED">Published</option>
@@ -102,9 +122,9 @@ const Dashboard = () => {
           </div>
           <div className="filter-group">
             <label>Type</label>
-            <select 
+            <select
               value={filters.patentType}
-              onChange={(e) => setFilters({...filters, patentType: e.target.value})}
+              onChange={(e) => setFilters({ ...filters, patentType: e.target.value })}
             >
               <option value="">All</option>
               <option value="UTILITY">Utility</option>
@@ -112,20 +132,23 @@ const Dashboard = () => {
             </select>
           </div>
           <div className="filter-actions">
-            <Button type="submit" variant="primary">Apply Filters</Button>
-            <Button 
-              type="button" 
+            {/* Clear button resets all filter state; useMemo re-derives the full list automatically */}
+            <Button
+              type="button"
               variant="outline"
               onClick={() => {
-                const resetFilters = { year: '', applicationNo: '', status: '', patentType: '' };
-                setFilters(resetFilters);
-                fetchPatents(resetFilters);
+                setFilters({ year: '', applicationNo: '', status: '', patentType: '' });
               }}
             >
               Clear
             </Button>
           </div>
-        </form>
+        </div>
+        {!loading && !error && (
+          <p className="filter-count">
+            Showing {filteredPatents.length} of {allPatents.length} patents
+          </p>
+        )}
       </div>
 
       {loading ? (
@@ -137,19 +160,24 @@ const Dashboard = () => {
         <div className="error-state clean-panel">
           <p>{error}</p>
         </div>
-      ) : patents.length === 0 ? (
+      ) : filteredPatents.length === 0 ? (
         <div className="empty-state clean-panel">
           <div className="empty-icon">📄</div>
           <h2>No Patents Found</h2>
-          <p>There are no patents registered in the system yet.</p>
+          {/* Distinguish between "no data at all" vs "filters matched nothing" */}
+          <p>
+            {allPatents.length === 0
+              ? 'There are no patents registered in the system yet.'
+              : 'No patents match the current filters. Try adjusting your criteria.'}
+          </p>
         </div>
       ) : (
         <div className="patents-grid">
-          {patents.map((patent) => (
-            <PatentCard 
-              key={patent.id || patent.applicationNo} 
-              patent={patent} 
-              onDelete={handleDelete} 
+          {filteredPatents.map((patent) => (
+            <PatentCard
+              key={patent.id || patent.applicationNo}
+              patent={patent}
+              onDelete={handleDelete}
             />
           ))}
         </div>
