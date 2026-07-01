@@ -81,7 +81,7 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="dashboard container">
+    <div className="dashboard container" style={{marginTop: '50px'}}>
       <div className="dashboard-header">
         <h1>Patent Registry</h1>
         <p className="subtitle">Manage and track all intellectual property registrations.</p>

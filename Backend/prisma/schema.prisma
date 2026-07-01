@@ -71,11 +71,16 @@ model Patent{
   
   weblink     String @db.Text
   
-  country     String @db.Text 
+  country     String @db.VarChar(100)
   
   userId      Int
   user        User       @relation(fields: [userId], references: [id])
 
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
+
+  @@index([year, status])
+  @@index([patentType, year, status])
+  @@index([patentType, country, status])
+  @@index([userId])
 }

@@ -4,7 +4,14 @@ const cookieParser = require("cookie-parser");
 const patentRoutes = require("./routes/patent.routes");
 const authRoutes = require("./routes/auth.routes");
 const app = express();
-app.use(cors());
+const corsOrigin = process.env.CLIENT_URL
+    ? process.env.CLIENT_URL.split(",").map((origin) => origin.trim())
+    : true;
+
+app.use(cors({
+    origin: corsOrigin,
+    credentials: true
+}));
 app.use(express.json());
 app.use(cookieParser());
 app.use("/api", patentRoutes);

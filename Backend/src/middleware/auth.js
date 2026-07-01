@@ -2,7 +2,11 @@ const jwt = require('jsonwebtoken');
 const secretKey = process.env.JWT_SECRET
 
 const authMiddleware = (req,res,next)=>{
-    const token = req.cookies.token;
+    const authHeader = req.headers.authorization || "";
+    const bearerToken = authHeader.toLowerCase().startsWith("bearer ")
+        ? authHeader.slice(7).trim()
+        : null;
+    const token = req.cookies?.token || bearerToken;
 
     if(!token){
         return res.status(401).json({

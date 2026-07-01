@@ -4,6 +4,7 @@ import Navbar from './components/Navbar';
 import Dashboard from './pages/Dashboard';
 import AddPatentForm from './pages/AddPatentForm';
 import PatentDetails from './pages/PatentDetails';
+import Analysis from './pages/Analysis';
 
 function App() {
   // Simple state for Light/Dark mode.
@@ -23,9 +24,10 @@ function App() {
     <Router>
       <div className="app-container">
         <Navbar isDark={isDark} toggleTheme={toggleTheme} />
-        <main className="page-wrapper">
+        <main className="page-wrapper" >
           <Routes>
             <Route path="/" element={<Dashboard />} />
+            <Route path="/analysis" element={<Analysis />} />
             <Route path="/add-patent" element={<AddPatentForm />} />
             <Route path="/patent/:id" element={<PatentDetails />} />
           </Routes>
