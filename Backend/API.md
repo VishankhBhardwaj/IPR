@@ -61,3 +61,45 @@
     "data": {}
   }
   ```
+
+---
+
+### 5. Register User
+* **URL:** `POST http://localhost:5000/auth/register`
+* **Request Body (JSON):**
+  ```json
+  {
+    "name": "name",
+    "email": "email",
+    "password": "password"
+  }
+  ```
+* **Response:**
+  ```json
+  {
+    "success": true,
+    "message": "User registered successfully",
+    "token": "jwt_token"
+  }
+  ```
+
+---
+
+### 6. Login User
+* **URL:** `POST http://localhost:5000/auth/login`
+* **Request Body (JSON):**
+  ```json
+  {
+    "email": "email",
+    "password": "password"
+  }
+  ```
+* **Response:**
+  ```json
+  {
+    "success": true,
+    "message": "User logged in successfully",
+    "token": "jwt_token"
+  }
+  ```
+
