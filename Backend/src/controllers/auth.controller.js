@@ -1,10 +1,10 @@
 const prisma = require("../config/prisma");
 const bcrypt = require("bcrypt");
 const { generateToken } = require("../lib/token");
-const cookies = require("cookie-parser");
+
 const registerUser = async(req,res)=>{
     try{
-        const {name,email,password} = req.body;
+        const {name,email,password,role} = req.body;
         if(!name || !email || !password){
             return res.status(400).json({
                 success:false,
@@ -27,11 +27,12 @@ const registerUser = async(req,res)=>{
             data:{
                 name:name,
                 email:email,
-                password:hashedPassword
+                password:hashedPassword,
+                role: role || "STUDENT"
             }
         })
         const token = generateToken(newUser.id);
-        cookies.set("token",token,{
+        res.cookie("token",token,{
             httpOnly:true,
             secure:process.env.NODE_ENV === "production",
             sameSite:"strict",
@@ -78,7 +79,7 @@ const loginUser = async(req,res)=>{
             });
         }
         const token = generateToken(user.id);
-        cookies.set("token",token,{
+        res.cookie("token",token,{
             httpOnly:true,
             secure:process.env.NODE_ENV === "production",
             sameSite:"strict",
@@ -97,3 +98,8 @@ const loginUser = async(req,res)=>{
         });
     }
 }
+
+module.exports = {
+    registerUser,
+    loginUser
+};
