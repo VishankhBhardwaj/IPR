@@ -94,10 +94,7 @@ const Auth = ({ onAuthSuccess }) => {
         });
       }
 
-      /* Persist JWT token if the backend returns one */
-      if (data?.token) {
-        localStorage.setItem('token', data.token);
-      }
+      /* Token is now handled automatically via HttpOnly cookies from the backend */
 
       toast.dismiss(loadingToastId);
 
