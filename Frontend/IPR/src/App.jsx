@@ -1,14 +1,24 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Dashboard from './pages/Dashboard';
 import AddPatentForm from './pages/AddPatentForm';
 import PatentDetails from './pages/PatentDetails';
 import Analysis from './pages/Analysis';
+import Auth from './pages/Auth';
+
+/* ---- Small helper: check if user is authenticated ---- */
+const isAuthenticated = () => !!localStorage.getItem('token');
+
+/* ---- Protected route wrapper ---- */
+const ProtectedRoute = ({ children }) => {
+  return isAuthenticated() ? children : <Navigate to="/auth" replace />;
+};
 
 function App() {
   // Simple state for Light/Dark mode.
   const [isDark, setIsDark] = useState(false);
+  const [authed, setAuthed] = useState(isAuthenticated());
 
   useEffect(() => {
     if (isDark) {
@@ -20,16 +30,41 @@ function App() {
 
   const toggleTheme = () => setIsDark(!isDark);
 
+  const handleAuthSuccess = () => {
+    setAuthed(true);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    setAuthed(false);
+  };
+
   return (
     <Router>
       <div className="app-container">
-        <Navbar isDark={isDark} toggleTheme={toggleTheme} />
-        <main className="page-wrapper" >
+        {/* Only show navbar when authenticated */}
+        {authed && <Navbar isDark={isDark} toggleTheme={toggleTheme} onLogout={handleLogout} />}
+
+        <main className={authed ? 'page-wrapper' : ''}>
           <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/analysis" element={<Analysis />} />
-            <Route path="/add-patent" element={<AddPatentForm />} />
-            <Route path="/patent/:id" element={<PatentDetails />} />
+            {/* Public route */}
+            <Route
+              path="/auth"
+              element={
+                authed
+                  ? <Navigate to="/" replace />
+                  : <Auth onAuthSuccess={handleAuthSuccess} />
+              }
+            />
+
+            {/* Protected routes */}
+            <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+            <Route path="/analysis" element={<ProtectedRoute><Analysis /></ProtectedRoute>} />
+            <Route path="/add-patent" element={<ProtectedRoute><AddPatentForm /></ProtectedRoute>} />
+            <Route path="/patent/:id" element={<ProtectedRoute><PatentDetails /></ProtectedRoute>} />
+
+            {/* Fallback */}
+            <Route path="*" element={<Navigate to={authed ? '/' : '/auth'} replace />} />
           </Routes>
         </main>
       </div>

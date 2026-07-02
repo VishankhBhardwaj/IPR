@@ -40,8 +40,7 @@ const registerUser = async(req,res)=>{
         })
         return res.status(201).json({
             success:true,
-            message:"User registered successfully",
-            token:token
+            message:"User registered successfully"
         })
     }catch(error){
         console.error("Error in registerUser:", error);
@@ -87,8 +86,7 @@ const loginUser = async(req,res)=>{
         })
         return res.status(200).json({
             success:true,
-            message:"User logged in successfully",
-            token:token
+            message:"User logged in successfully"
         })
     }catch(error){
         console.error("Error in loginUser:", error);
@@ -99,7 +97,20 @@ const loginUser = async(req,res)=>{
     }
 }
 
+const logoutUser = async (req, res) => {
+    res.clearCookie("token", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict"
+    });
+    return res.status(200).json({
+        success: true,
+        message: "User logged out successfully"
+    });
+};
+
 module.exports = {
     registerUser,
-    loginUser
+    loginUser,
+    logoutUser
 };
