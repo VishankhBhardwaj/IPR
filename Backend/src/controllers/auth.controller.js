@@ -40,7 +40,8 @@ const registerUser = async(req,res)=>{
         })
         return res.status(201).json({
             success:true,
-            message:"User registered successfully"
+            message:"User registered successfully",
+            token:token
         })
     }catch(error){
         console.error("Error in registerUser:", error);
@@ -86,7 +87,8 @@ const loginUser = async(req,res)=>{
         })
         return res.status(200).json({
             success:true,
-            message:"User logged in successfully"
+            message:"User logged in successfully",
+            token:token
         })
     }catch(error){
         console.error("Error in loginUser:", error);
