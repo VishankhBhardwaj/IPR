@@ -11,8 +11,8 @@ import Auth from './pages/Auth';
 const isAuthenticated = () => !!localStorage.getItem('token');
 
 /* ---- Protected route wrapper ---- */
-const ProtectedRoute = ({ children }) => {
-  return isAuthenticated() ? children : <Navigate to="/auth" replace />;
+const ProtectedRoute = ({ children, isAuthed }) => {
+  return isAuthed ? children : <Navigate to="/auth" replace />;
 };
 
 function App() {
@@ -58,10 +58,10 @@ function App() {
             />
 
             {/* Protected routes */}
-            <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-            <Route path="/analysis" element={<ProtectedRoute><Analysis /></ProtectedRoute>} />
-            <Route path="/add-patent" element={<ProtectedRoute><AddPatentForm /></ProtectedRoute>} />
-            <Route path="/patent/:id" element={<ProtectedRoute><PatentDetails /></ProtectedRoute>} />
+            <Route path="/" element={<ProtectedRoute isAuthed={authed}><Dashboard /></ProtectedRoute>} />
+            <Route path="/analysis" element={<ProtectedRoute isAuthed={authed}><Analysis /></ProtectedRoute>} />
+            <Route path="/add-patent" element={<ProtectedRoute isAuthed={authed}><AddPatentForm /></ProtectedRoute>} />
+            <Route path="/patent/:id" element={<ProtectedRoute isAuthed={authed}><PatentDetails /></ProtectedRoute>} />
 
             {/* Fallback */}
             <Route path="*" element={<Navigate to={authed ? '/' : '/auth'} replace />} />
