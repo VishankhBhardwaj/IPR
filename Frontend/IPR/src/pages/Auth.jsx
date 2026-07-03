@@ -94,7 +94,11 @@ const Auth = ({ onAuthSuccess }) => {
         });
       }
 
-      /* Token is now handled automatically via HttpOnly cookies from the backend */
+      /* Token is automatically handled via HttpOnly cookies from the backend, 
+         but we also store it in localStorage per request */
+      if (data && data.token) {
+        localStorage.setItem('token', data.token);
+      }
 
       toast.dismiss(loadingToastId);
 
