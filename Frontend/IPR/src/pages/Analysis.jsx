@@ -1,35 +1,40 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { BarChart3, Filter, RefreshCw, TableProperties } from 'lucide-react';
-import { getPatentAnalysis } from '../api/patentApi';
-import Button from '../components/Button';
-import './Analysis.css';
-
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { BarChart3, Filter, RefreshCw, TableProperties } from "lucide-react";
+import { getPatentAnalysis } from "../api/patentApi";
+import Button from "../components/Button";
+import "./Analysis.css";
+import Chart from "./Chart";
+import { Download } from "lucide-react";
+import { downloadAnalysisPDF } from "../utils/downloadPdf";
 const emptyFilters = {
-  applicantName: '',
-  year: '',
-  status: '',
-  patentType: '',
-  country: '',
+  applicantName: "",
+  year: "",
+  status: "",
+  patentType: "",
+  country: "",
 };
 
 const columnLabels = {
-  granted: 'Granted',
-  published: 'Published',
-  design: 'Design',
-  utility: 'Utility',
-  grandTotal: 'Grand Total',
+  granted: "Granted",
+  published: "Published",
+  design: "Design",
+  utility: "Utility",
+  grandTotal: "Grand Total",
 };
 
 const getRowKey = (table) => {
-  if (!table) return 'year';
-  if (table.rows?.some((row) => row.country !== undefined) || table.grandTotal?.country !== undefined) {
-    return 'country';
+  if (!table) return "year";
+  if (
+    table.rows?.some((row) => row.country !== undefined) ||
+    table.grandTotal?.country !== undefined
+  ) {
+    return "country";
   }
-  return 'year';
+  return "year";
 };
 
 const formatCell = (value) => {
-  if (value === undefined || value === null || value === '') return 0;
+  if (value === undefined || value === null || value === "") return 0;
   return value;
 };
 
@@ -37,7 +42,7 @@ const PivotTable = ({ table }) => {
   if (!table) return null;
 
   const rowKey = getRowKey(table);
-  const rowHeader = rowKey === 'country' ? 'Country' : 'Year';
+  const rowHeader = rowKey === "country" ? "Country" : "Year";
   const rows = [...(table.rows || []), table.grandTotal].filter(Boolean);
 
   return (
@@ -49,7 +54,7 @@ const PivotTable = ({ table }) => {
             <p>
               {Object.entries(table.filters)
                 .map(([key, value]) => `${key}: ${value}`)
-                .join(' | ')}
+                .join(" | ")}
             </p>
           )}
         </div>
@@ -68,10 +73,13 @@ const PivotTable = ({ table }) => {
           </thead>
           <tbody>
             {rows.map((row) => {
-              const isGrandTotal = row[rowKey] === 'Grand Total';
+              const isGrandTotal = row[rowKey] === "Grand Total";
 
               return (
-                <tr key={`${table.title}-${row[rowKey]}`} className={isGrandTotal ? 'grand-total-row' : ''}>
+                <tr
+                  key={`${table.title}-${row[rowKey]}`}
+                  className={isGrandTotal ? "grand-total-row" : ""}
+                >
                   <td>{row[rowKey]}</td>
                   {(table.columns || []).map((column) => (
                     <td key={column}>{formatCell(row[column])}</td>
@@ -100,24 +108,24 @@ const Analysis = () => {
 
     return [
       {
-        label: 'Total Patents',
+        label: "Total Patents",
         value: analysis?.totalPatents ?? 0,
-        detail: 'Records matching filters',
+        detail: "Records matching filters",
       },
       {
-        label: 'Granted',
+        label: "Granted",
         value: publishedGranted?.granted ?? 0,
-        detail: 'Across all patent types',
+        detail: "Across all patent types",
       },
       {
-        label: 'Published',
+        label: "Published",
         value: publishedGranted?.published ?? 0,
-        detail: 'Across all patent types',
+        detail: "Across all patent types",
       },
       {
-        label: 'Utility Patents',
+        label: "Utility Patents",
         value: utilityDesign?.utility ?? utilityCountry?.grandTotal ?? 0,
-        detail: 'Used in country-wise analysis',
+        detail: "Used in country-wise analysis",
       },
     ];
   }, [analysis]);
@@ -126,7 +134,9 @@ const Analysis = () => {
     try {
       setLoading(true);
       const params = Object.fromEntries(
-        Object.entries(nextFilters).filter(([, value]) => String(value || '').trim() !== '')
+        Object.entries(nextFilters).filter(
+          ([, value]) => String(value || "").trim() !== "",
+        ),
       );
       const response = await getPatentAnalysis(params);
 
@@ -135,11 +145,14 @@ const Analysis = () => {
         setError(null);
       } else {
         setAnalysis(null);
-        setError(response.message || 'Unable to load analysis.');
+        setError(response.message || "Unable to load analysis.");
       }
     } catch (err) {
       setAnalysis(null);
-      setError(err.response?.data?.message || 'Failed to load analysis. Please check login and backend server.');
+      setError(
+        err.response?.data?.message ||
+          "Failed to load analysis. Please check login and backend server.",
+      );
     } finally {
       setLoading(false);
     }
@@ -170,15 +183,26 @@ const Analysis = () => {
   };
 
   return (
-    <div className="analysis-page container animate-fade-in" >
-      <div className="analysis-header" style={{marginTop: '50px'}}>
+    <div className="analysis-page container animate-fade-in">
+      <div className="download-container">
+        <button
+          className="download-btn"
+          onClick={() => downloadAnalysisPDF(tables)}
+        >
+          <Download size={18} />
+          Download PDF
+        </button>
+      </div>
+      <div className="analysis-header" style={{ marginTop: "50px" }}>
         <div>
           <h1>Analysis</h1>
-          <p className="subtitle">Year-wise, type-wise, and country-wise patent summaries.</p>
+          <p className="subtitle">
+            Year-wise, type-wise, and country-wise patent summaries.
+          </p>
         </div>
         <BarChart3 size={34} />
       </div>
-{/* 
+      {/* 
       <form className="analysis-filters clean-panel" onSubmit={handleSubmit}>
         <div className="filter-group">
           <label htmlFor="applicantName">Applicant</label>
@@ -259,7 +283,10 @@ const Analysis = () => {
         <>
           <div className="analysis-metrics">
             {metricCards.map((metric) => (
-              <section className="analysis-metric clean-panel" key={metric.label}>
+              <section
+                className="analysis-metric clean-panel"
+                key={metric.label}
+              >
                 <span>{metric.label}</span>
                 <strong>{metric.value}</strong>
                 <p>{metric.detail}</p>
@@ -275,6 +302,7 @@ const Analysis = () => {
           </div>
         </>
       )}
+      <Chart tables={tables} />
     </div>
   );
 };

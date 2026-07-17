@@ -1,0 +1,32 @@
+.chart-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+    gap: 30px;
+    margin-top: 40px;
+}
+
+.chart-card {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 5px 18px rgba(0,0,0,.08);
+}
+
+.chart-card h2 {
+    margin-bottom: 20px;
+    font-size: 20px;
+    font-weight: 600;
+    color: #222;
+}
+
+.recharts-wrapper {
+    font-size: 14px;
+}
+
+@media (max-width:768px){
+
+.chart-grid{
+    grid-template-columns:1fr;
+}
+
+}

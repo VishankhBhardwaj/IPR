@@ -150,7 +150,43 @@
   color: var(--text-primary);
   font-weight: 700;
 }
+.download-container {
+  display: flex;
+  flex-direction: row-reverse;
+  margin-top: 100px;
+}
 
+.download-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  background: var(--accent-primary);
+  border: 0;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: background-color 0.2s ease, box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.download-btn:hover {
+  background: var(--accent-hover);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+.download-btn:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--accent-primary) 35%, transparent);
+  outline-offset: 2px;
+}
+
+.download-btn:active {
+  transform: translateY(0);
+}
 @media (max-width: 1080px) {
   .analysis-filters {
     grid-template-columns: repeat(3, minmax(0, 1fr));
