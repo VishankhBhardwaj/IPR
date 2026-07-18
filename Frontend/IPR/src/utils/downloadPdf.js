@@ -73,3 +73,84 @@ export const downloadAnalysisPDF = (tables) => {
 
   doc.save("Patent-Analysis.pdf");
 };
+
+const formatDateForPdf = (value) => {
+  if (!value) return "-";
+
+  const parsedDate = new Date(value);
+  if (Number.isNaN(parsedDate.getTime())) {
+    return String(value);
+  }
+
+  return parsedDate.toLocaleDateString("en-GB");
+};
+
+export const downloadPatentsPDF = (patents = []) => {
+  const doc = new jsPDF({ orientation: "landscape" });
+
+  doc.setFontSize(18);
+  doc.text("Patent Registry Report", 14, 16);
+
+  doc.setFontSize(10);
+  doc.text(`Generated on: ${new Date().toLocaleString("en-GB")}`, 14, 22);
+  doc.text(`Total records: ${patents.length}`, 14, 27);
+
+  const head = [
+    [
+      "Application No.",
+      "Title",
+      "Applicant",
+      "Inventor",
+      "Year",
+      "Status",
+      "Type",
+      "Filed Date",
+      "Publication Date",
+      "Country",
+    ],
+  ];
+
+  const body = patents.map((patent) => [
+    patent.applicationNo || "-",
+    patent.patentTitle || "-",
+    patent.applicantName || "-",
+    patent.inventorName || "-",
+    patent.year ?? "-",
+    patent.status || "-",
+    patent.patentType || "-",
+    formatDateForPdf(patent.filedDate),
+    formatDateForPdf(patent.publicationDate),
+    patent.country || "-",
+  ]);
+
+  autoTable(doc, {
+    startY: 32,
+    head,
+    body,
+    theme: "grid",
+    styles: {
+      fontSize: 8,
+      cellPadding: 2,
+      overflow: "linebreak",
+    },
+    headStyles: {
+      fillColor: [41, 128, 185],
+      textColor: 255,
+      fontStyle: "bold",
+    },
+    columnStyles: {
+      0: { cellWidth: 30 },
+      1: { cellWidth: 48 },
+      2: { cellWidth: 34 },
+      3: { cellWidth: 34 },
+      4: { cellWidth: 14 },
+      5: { cellWidth: 20 },
+      6: { cellWidth: 16 },
+      7: { cellWidth: 24 },
+      8: { cellWidth: 24 },
+      9: { cellWidth: 18 },
+    },
+  });
+
+  doc.save("Patent-Registry.pdf");
+};

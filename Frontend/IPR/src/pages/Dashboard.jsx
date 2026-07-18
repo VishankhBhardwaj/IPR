@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { getAllPatents, deletePatent } from '../api/patentApi';
 import PatentCard from '../components/PatentCard';
 import Button from '../components/Button';
+import { downloadPatentsPDF } from '../utils/downloadPdf';
 import './Dashboard.css';
 
 const Dashboard = () => {
@@ -18,28 +19,40 @@ const Dashboard = () => {
 
   // Fetch all patents once on mount — no re-fetching on filter changes
   useEffect(() => {
-    fetchPatents();
-  }, []);
+    let isMounted = true;
 
-  // Fetches the full patent list from the API (called only once on component mount)
-  const fetchPatents = async () => {
-    try {
-      setLoading(true);
-      const response = await getAllPatents();
-      // Assume the response structure is { success: true, data: [...] }
-      if (response.success) {
-        setAllPatents(response.data);
-      } else {
-        setAllPatents(response); // Fallback in case the array is returned directly
+    const fetchPatents = async () => {
+      try {
+        const response = await getAllPatents();
+
+        if (!isMounted) return;
+
+        // Assume the response structure is { success: true, data: [...] }
+        if (response.success) {
+          setAllPatents(response.data);
+        } else {
+          setAllPatents(response); // Fallback in case the array is returned directly
+        }
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching patents:', err);
+
+        if (isMounted) {
+          setError('Failed to load patents. Please check if the backend server is running.');
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
       }
-      setError(null);
-    } catch (err) {
-      console.error('Error fetching patents:', err);
-      setError('Failed to load patents. Please check if the backend server is running.');
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+
+    fetchPatents();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // Client-side filtering using useMemo — replaces the previous approach of making
   // a new API call on every filter change. This eliminates redundant network requests
@@ -78,6 +91,10 @@ const Dashboard = () => {
         alert('Failed to delete patent.');
       }
     }
+  };
+
+  const handleDownloadPdf = () => {
+    downloadPatentsPDF(filteredPatents);
   };
 
   return (
@@ -132,6 +149,13 @@ const Dashboard = () => {
             </select>
           </div>
           <div className="filter-actions">
+            <Button
+              type="button"
+              onClick={handleDownloadPdf}
+              disabled={loading || filteredPatents.length === 0}
+            >
+              Download PDF
+            </Button>
             {/* Clear button resets all filter state; useMemo re-derives the full list automatically */}
             <Button
               type="button"
