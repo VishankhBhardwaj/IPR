@@ -5,12 +5,20 @@ const api = axios.create({
   withCredentials: true,
 });
 
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
 /**
  * Register a new user.
- * Body: { name, email, password, role }
+ * Body: { name, email, password, role, department }
  */
-export const register = async ({ name, email, password, role }) => {
-  const response = await api.post('/auth/register', { name, email, password, role });
+export const register = async ({ name, email, password, role, department }) => {
+  const response = await api.post('/auth/register', { name, email, password, role, department });
   return response.data;
 };
 

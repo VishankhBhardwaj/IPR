@@ -137,7 +137,8 @@ const buildPatentData = (body, userId, { partial = false } = {}) => {
         "driveLink",
         "patentSession",
         "weblink",
-        "country"
+        "country",
+        "department"
     ];
 
     const data = {};

@@ -3,6 +3,20 @@ import { useNavigate } from 'react-router-dom';
 import { addPatent } from '../api/patentApi';
 import Button from '../components/Button';
 import './AddPatentForm.css';
+import { Building, ChevronDown } from 'lucide-react';
+
+const DEPARTMENTS = [
+  { value: '', label: 'Select Department', disabled: true },
+  { value: 'CSE', label: 'Computer Science and Engineering (CSE)' },
+  { value: 'IT', label: 'Information Technology (IT)' },
+  { value: 'ECE', label: 'Electronics and Communication (ECE)' },
+  { value: 'MAE', label: 'Mechanical and Automation (MAE)' },
+  { value: 'EEE', label: 'Electrical and Electronics (EEE)' },
+  { value: 'CST', label: 'Computer Science and Technology (CST)' },
+  { value: 'ITE', label: 'Information Technology and Engineering (ITE)' },
+  { value: 'AI&ML', label: 'AI and Machine Learning (AI&ML)' },
+  { value: 'AI&DS', label: 'AI and Data Science (AI&DS)' },
+];
 
 const initialFormState = {
   applicationNo: '',
@@ -20,6 +34,7 @@ const initialFormState = {
   patentSession: '',
   weblink: '',
   country: 'India',
+  department: '',
   userId: 1 // Defaulting to 1 as per assumption since there is no auth
 };
 
@@ -255,6 +270,16 @@ const AddPatentForm = () => {
               required
               placeholder="e.g. 2025-26"
             />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="department">Department</label>
+            <select id="department" name="department" value={formData.department} onChange={handleChange}>
+              <option value="">Select Department</option>
+              {DEPARTMENTS.slice(1).map((d) => (
+                <option key={d.value} value={d.value}>{d.label}</option>
+              ))}
+            </select>
           </div>
         </div>
 

@@ -4,7 +4,7 @@ const { generateToken } = require("../lib/token");
 
 const registerUser = async(req,res)=>{
     try{
-        const {name,email,password,role} = req.body;
+        const {name,email,password,role,department} = req.body;
         if(!name || !email || !password){
             return res.status(400).json({
                 success:false,
@@ -28,7 +28,8 @@ const registerUser = async(req,res)=>{
                 name:name,
                 email:email,
                 password:hashedPassword,
-                role: role || "STUDENT"
+                role: role || "STUDENT",
+                department: department || null
             }
         })
         const token = generateToken(newUser.id);

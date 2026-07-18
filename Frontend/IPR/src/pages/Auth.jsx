@@ -12,6 +12,7 @@ import {
   LogIn,
   UserPlus,
   ChevronDown,
+  Building,
 } from 'lucide-react';
 import { login, register } from '../api/authApi';
 import './Auth.css';
@@ -20,14 +21,28 @@ import './Auth.css';
 /*  Roles — sourced from Prisma schema: enum Role { ADMIN FACULTY STUDENT }  */
 /* ------------------------------------------------------------------ */
 const ROLES = [
+  { value: '', label: 'Select Role', disabled: true },
   { value: 'ADMIN',   label: 'Admin' },
   { value: 'FACULTY', label: 'Faculty' },
-  // { value: 'STUDENT', label: 'Student' },  // uncomment when needed
+// { value: 'STUDENT', label: 'Student' },  // uncomment when needed
 ];
 
-/* ------------------------------------------------------------------ */
-/*  Auth Page                                                           */
-/* ------------------------------------------------------------------ */
+
+const DEPARTMENTS = [
+  { value: '', label: 'Select Department', disabled: true },
+  { value: 'CSE', label: 'Computer Science and Engineering (CSE)' },
+  { value: 'IT', label: 'Information Technology (IT)' },
+  { value: 'ECE', label: 'Electronics and Communication (ECE)' },
+  { value: 'MAE', label: 'Mechanical and Automation (MAE)' },
+  { value: 'EEE', label: 'Electrical and Electronics (EEE)' },
+  { value: 'CST', label: 'Computer Science and Technology (CST)' },
+  { value: 'ITE', label: 'Information Technology and Engineering (ITE)' },
+  { value: 'AI&ML', label: 'AI and Machine Learning (AI&ML)' },
+  { value: 'AI&DS', label: 'AI and Data Science (AI&DS)' },
+];
+
+
+
 const Auth = ({ onAuthSuccess }) => {
   const navigate = useNavigate();
 
@@ -39,7 +54,8 @@ const Auth = ({ onAuthSuccess }) => {
     name: '',
     email: '',
     password: '',
-    role: 'FACULTY',
+    role: '',
+    department: '',
   });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -47,7 +63,7 @@ const Auth = ({ onAuthSuccess }) => {
   /* ---------------------------------------------------------------- */
   const switchMode = (next) => {
     setMode(next);
-    setForm({ name: '', email: '', password: '', role: 'STUDENT' });
+    setForm({ name: '', email: '', password: '', role: '', department: '' });
   };
 
   const handleChange = (e) => {
@@ -67,8 +83,16 @@ const Auth = ({ onAuthSuccess }) => {
       toast.error('Full name is required.');
       return;
     }
+    if (mode === 'register' && !form.role) {
+      toast.error('Please select a role.');
+      return;
+    }
     if (form.password.length < 6) {
       toast.error('Password must be at least 6 characters.');
+      return;
+    }
+    if (mode === 'register' && form.role !== 'ADMIN' && !form.department) {
+      toast.error('Please select a department.');
       return;
     }
 
@@ -91,6 +115,7 @@ const Auth = ({ onAuthSuccess }) => {
           email: form.email,
           password: form.password,
           role: form.role,         // ADMIN | FACULTY | STUDENT
+          department: form.role === 'ADMIN' ? '' : form.department,
         });
       }
 
@@ -251,7 +276,32 @@ const Auth = ({ onAuthSuccess }) => {
                   disabled={loading}
                 >
                   {ROLES.map((r) => (
-                    <option key={r.value} value={r.value}>{r.label}</option>
+                    <option key={r.value} value={r.value} disabled={r.disabled}>{r.label}</option>
+                  ))}
+                </select>
+                <span style={{ position: 'absolute', right: '0.85rem', color: 'var(--text-tertiary)', pointerEvents: 'none' }}>
+                  <ChevronDown size={16} />
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* Department — register only and NOT admin */}
+          {mode === 'register' && form.role && form.role !== 'ADMIN' && (
+            <div className="auth-field">
+              <label htmlFor="auth-department" className="auth-label">Department</label>
+              <div className="auth-input-wrap">
+                <span className="auth-input-icon"><Building size={16} /></span>
+                <select
+                  id="auth-department"
+                  name="department"
+                  value={form.department}
+                  onChange={handleChange}
+                  className="auth-select"
+                  disabled={loading}
+                >
+                  {DEPARTMENTS.map((d) => (
+                    <option key={d.value} value={d.value} disabled={d.disabled}>{d.label}</option>
                   ))}
                 </select>
                 <span style={{ position: 'absolute', right: '0.85rem', color: 'var(--text-tertiary)', pointerEvents: 'none' }}>
