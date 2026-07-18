@@ -124,6 +124,9 @@ const Auth = ({ onAuthSuccess }) => {
       if (data && data.token) {
         localStorage.setItem('token', data.token);
       }
+      if (data && data.role) {
+        localStorage.setItem('role', data.role);
+      }
 
       toast.dismiss(loadingToastId);
 
