@@ -1,4 +1,5 @@
 const prisma = require('./src/config/prisma.js');
+const bcrypt = require('bcrypt');
 const xlsx = require('xlsx');
 
 function excelDateToJSDate(serial) {
@@ -70,7 +71,7 @@ async function main() {
     data: {
       name: "Admin User",
       email: "admin@example.com",
-      password: "admin123",
+      password: await bcrypt.hash("admin123", 10),
       role: "ADMIN",
     },
   });
@@ -79,7 +80,7 @@ async function main() {
     data: {
       name: "Dr. John Smith",
       email: "faculty@example.com",
-      password: "faculty123",
+      password: await bcrypt.hash("faculty123", 10),
       role: "FACULTY",
     },
   });
@@ -88,7 +89,7 @@ async function main() {
     data: {
       name: "Alice Johnson",
       email: "student@example.com",
-      password: "student123",
+      password: await bcrypt.hash("student123", 10),
       role: "STUDENT",
     },
   });

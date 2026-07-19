@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { ShieldCheck, LayoutDashboard, PlusCircle, Sun, Moon, BarChart3, LogOut, Menu, X } from 'lucide-react';
+import { ShieldCheck, LayoutDashboard, PlusCircle, Sun, Moon, BarChart3, LogOut, Menu, X, Shield } from 'lucide-react';
 import './Navbar.css';
 
-const Navbar = ({ isDark, toggleTheme, onLogout }) => {
+const Navbar = ({ isDark, toggleTheme, onLogout, role }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -52,6 +52,17 @@ const Navbar = ({ isDark, toggleTheme, onLogout }) => {
             <PlusCircle size={18} />
             Add Patent
           </Link>
+
+          {role === 'ADMIN' && (
+            <Link 
+              to="/admin" 
+              className={`nav-link ${location.pathname === '/admin' ? 'active' : ''}`}
+              onClick={closeMenu}
+            >
+              <Shield size={18} />
+              Admin
+            </Link>
+          )}
           
           <div className="nav-actions">
             {/* Theme Toggle Button */}

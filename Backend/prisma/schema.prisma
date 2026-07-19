@@ -26,11 +26,12 @@ enum PatentStatus {
 
 
 model User {
-  id       Int      @id @default(autoincrement())
+  id        Int      @id @default(autoincrement())
   name      String
   email     String   @unique
   password  String
   role      Role
+  department String?
 
   patents   Patent[]
 
@@ -72,6 +73,8 @@ model Patent{
   weblink     String @db.Text
   
   country     String @db.VarChar(100)
+  
+  department  String?
   
   userId      Int
   user        User       @relation(fields: [userId], references: [id])
