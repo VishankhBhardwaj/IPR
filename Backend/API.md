@@ -16,7 +16,7 @@ The Excel data maps to the `Patent` model like this:
 | --- | --- | --- |
 | Application No. | `applicationNo` | Unique patent application number |
 | Published / Granted | `status` | `PUBLISHED` or `GRANTED` |
-| Inventor/s Name | `inventorName` | Text |
+| Inventor/s Name | `inventorName` + `inventors[]` | Legacy text plus structured inventor records |
 | Title of the Patent | `patentTitle` | Text |
 | Applicant/s Name | `applicantName` | Text |
 | Filed Date (DD/MM/YYYY) | `filedDate` | Date |
@@ -29,6 +29,14 @@ The Excel data maps to the `Patent` model like this:
 | Session | `patentSession` | Example: `2025-26` |
 | Web link | `weblink` | Text URL |
 | Country | `country` | Used for country-wise analysis |
+
+Structured inventor records are stored separately:
+
+| Field | Meaning |
+| --- | --- |
+| `inventors[].name` | Individual inventor name |
+| `inventors[].designation` | `STUDENT`, `ASSISTANT_PROFESSOR`, `ASSOCIATE_PROFESSOR`, or `PROFESSOR` |
+| `inventors[].departments` | One or more departments for that inventor |
 
 ## Auth
 
@@ -74,7 +82,18 @@ The Excel data maps to the `Patent` model like this:
 {
   "applicationNo": "202641000001",
   "status": "PUBLISHED",
-  "inventorName": "Inventor Name",
+  "inventors": [
+    {
+      "name": "Inventor One",
+      "designation": "ASSISTANT_PROFESSOR",
+      "departments": ["CSE", "IT"]
+    },
+    {
+      "name": "Inventor Two",
+      "designation": "STUDENT",
+      "departments": ["CSE"]
+    }
+  ],
   "patentTitle": "Patent Title",
   "applicantName": "Applicant Name",
   "filedDate": "2026-01-10",

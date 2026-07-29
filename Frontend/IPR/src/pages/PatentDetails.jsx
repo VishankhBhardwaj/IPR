@@ -68,6 +68,14 @@ const PatentDetails = () => {
     }
   };
 
+  const formatDesignation = (designation) => {
+    return (designation || '')
+      .toLowerCase()
+      .split('_')
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  };
+
   if (loading) {
     return (
       <div className="patent-details-loading container">
@@ -128,14 +136,6 @@ const PatentDetails = () => {
               <div>
                 <span className="item-label">Publication/Grant Number</span>
                 <span className="item-value font-mono">{patent.publicationNo || 'N/A'}</span>
-              </div>
-            </div>
-
-            <div className="detail-item">
-              <User size={18} className="item-icon" />
-              <div>
-                <span className="item-label">Inventor(s) Name</span>
-                <span className="item-value">{patent.inventorName}</span>
               </div>
             </div>
 
@@ -201,6 +201,38 @@ const PatentDetails = () => {
             </div>
           </div>
         </div>
+
+        <section className="inventor-details-section">
+          <h3 className="section-title">Inventors</h3>
+          {patent.inventors?.length > 0 ? (
+            <div className="inventor-details-grid">
+              {patent.inventors.map((inventor) => (
+                <article className="inventor-detail-card" key={inventor.id || inventor.name}>
+                  <div className="inventor-detail-main">
+                    <User size={18} className="item-icon" />
+                    <div>
+                      <h4>{inventor.name}</h4>
+                      <span>{formatDesignation(inventor.designation)}</span>
+                    </div>
+                  </div>
+                  <div className="department-chip-list">
+                    {(inventor.departments || []).map((department) => (
+                      <span className="department-chip" key={department}>{department}</span>
+                    ))}
+                  </div>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <div className="detail-item">
+              <User size={18} className="item-icon" />
+              <div>
+                <span className="item-label">Inventor(s) Name</span>
+                <span className="item-value">{patent.inventorName || 'N/A'}</span>
+              </div>
+            </div>
+          )}
+        </section>
 
         {/* Card Actions / External Links */}
         <div className="details-links">

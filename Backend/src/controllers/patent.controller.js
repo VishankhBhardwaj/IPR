@@ -3,6 +3,21 @@ const prisma = require("../config/prisma");
 const STATUS_COLUMNS = ["GRANTED", "PUBLISHED"];
 const TYPE_COLUMNS = ["DESIGN", "UTILITY"];
 
+const patentInclude = {
+    inventors: {
+        include: {
+            departments: {
+                include: {
+                    department: true
+                }
+            }
+        },
+        orderBy: {
+            id: "asc"
+        }
+    }
+};
+
 const cleanText = (value) => {
     if (value === undefined || value === null) return undefined;
     const text = String(value).trim();
@@ -23,6 +38,107 @@ const normalizePatentType = (value) => {
     if (type === "U" || type.startsWith("UTIL")) return "UTILITY";
     if (type === "D" || type.startsWith("DESIGN")) return "DESIGN";
     return type;
+};
+
+const normalizeDesignation = (value) => {
+    const designation = cleanText(value)?.toUpperCase().replace(/[\s-]+/g, "_");
+    if (!designation) return undefined;
+
+    const designationMap = {
+        STUDENT: "STUDENT",
+        ASSISTANT_PROFESSOR: "ASSISTANT_PROFESSOR",
+        ASSISTANTPROFESSOR: "ASSISTANT_PROFESSOR",
+        ASSOCIATE_PROFESSOR: "ASSOCIATE_PROFESSOR",
+        ASSOCIATEPROFESSOR: "ASSOCIATE_PROFESSOR",
+        PROFESSOR: "PROFESSOR"
+    };
+
+    return designationMap[designation];
+};
+
+const normalizeDepartments = (departments) => {
+    if (Array.isArray(departments)) {
+        return departments
+            .map(cleanText)
+            .filter(Boolean);
+    }
+
+    return String(departments || "")
+        .split(",")
+        .map(cleanText)
+        .filter(Boolean);
+};
+
+const parseInventors = (inventors) => {
+    if (!Array.isArray(inventors)) return [];
+
+    return inventors
+        .map((inventor) => {
+            const name = cleanText(inventor.name);
+            const designation = normalizeDesignation(inventor.designation);
+            const departments = normalizeDepartments(inventor.departments);
+
+            if (!name || !designation || departments.length === 0) return null;
+
+            return {
+                name,
+                designation,
+                departments: [...new Set(departments)]
+            };
+        })
+        .filter(Boolean);
+};
+
+const getInventorNameText = (inventors, fallback) => {
+    const names = parseInventors(inventors).map((inventor) => inventor.name);
+    return names.length > 0 ? names.join(", ") : cleanText(fallback);
+};
+
+const formatPatent = (patent) => {
+    if (!patent) return patent;
+
+    return {
+        ...patent,
+        inventors: (patent.inventors || []).map((inventor) => ({
+            id: inventor.id,
+            name: inventor.name,
+            designation: inventor.designation,
+            departments: (inventor.departments || []).map((item) => item.department.name)
+        }))
+    };
+};
+
+const syncPatentInventors = async (tx, patentId, inventors) => {
+    const parsedInventors = parseInventors(inventors);
+
+    await tx.patentInventor.deleteMany({
+        where: { patentId }
+    });
+
+    for (const inventor of parsedInventors) {
+        const createdInventor = await tx.patentInventor.create({
+            data: {
+                name: inventor.name,
+                designation: inventor.designation,
+                patentId
+            }
+        });
+
+        for (const departmentName of inventor.departments) {
+            const department = await tx.department.upsert({
+                where: { name: departmentName },
+                update: {},
+                create: { name: departmentName }
+            });
+
+            await tx.inventorDepartment.create({
+                data: {
+                    inventorId: createdInventor.id,
+                    departmentId: department.id
+                }
+            });
+        }
+    }
 };
 
 const parseRequiredDate = (value, fieldName) => {
@@ -144,10 +260,17 @@ const buildPatentData = (body, userId, { partial = false } = {}) => {
     const data = {};
     fields.forEach((field) => {
         if (!partial || body[field] !== undefined) {
-            const value = cleanText(body[field]);
+            const value = field === "inventorName"
+                ? getInventorNameText(body.inventors, body[field])
+                : cleanText(body[field]);
             if (value !== undefined) data[field] = value;
         }
     });
+
+    if (body.inventors !== undefined) {
+        const inventorName = getInventorNameText(body.inventors, body.inventorName);
+        if (inventorName) data.inventorName = inventorName;
+    }
 
     if (!partial || body.status !== undefined) {
         const status = normalizeStatus(body.status);
@@ -182,6 +305,7 @@ const buildPatentData = (body, userId, { partial = false } = {}) => {
 const getAllPatents = async (req, res) => {
     try {
         const data = await prisma.patent.findMany({
+            include: patentInclude,
             orderBy: [
                 { year: "desc" },
                 { publicationDate: "desc" }
@@ -189,7 +313,7 @@ const getAllPatents = async (req, res) => {
         });
         return res.status(200).json({
             success: true,
-            data: data
+            data: data.map(formatPatent)
         })
     } catch (error) {
         res.status(500).json({
@@ -201,9 +325,10 @@ const getAllPatents = async (req, res) => {
 const addPatent = async (req, res) => {
     try {
         const userId = req.userId || req.body.userId;
+        const inventors = parseInventors(req.body.inventors);
         if (
             !req.body.applicationNo ||
-            !req.body.inventorName ||
+            (!req.body.inventorName && inventors.length === 0) ||
             !req.body.patentTitle ||
             !req.body.applicantName ||
             !req.body.filedDate ||
@@ -223,12 +348,23 @@ const addPatent = async (req, res) => {
                 message: "All required fields are mandatory"
             });
         }
-        const newPatent = await prisma.patent.create({
-            data: buildPatentData(req.body, userId)
+        const newPatent = await prisma.$transaction(async (tx) => {
+            const patent = await tx.patent.create({
+                data: buildPatentData(req.body, userId)
+            });
+
+            if (req.body.inventors !== undefined) {
+                await syncPatentInventors(tx, patent.id, req.body.inventors);
+            }
+
+            return tx.patent.findUnique({
+                where: { id: patent.id },
+                include: patentInclude
+            });
         });
         res.status(201).json({
             success: true,
-            data: newPatent
+            data: formatPatent(newPatent)
         });
     } catch (error) {
         res.status(500).json({
@@ -240,14 +376,26 @@ const addPatent = async (req, res) => {
 const updatePatent = async (req, res) => {
     try {
         const { id } = req.params;
-        const updatedPatent = await prisma.patent.update({
-            where: { id: parseInt(id) },
-            data: buildPatentData(req.body, req.body.userId, { partial: true })
+        const patentId = parseInt(id);
+        const updatedPatent = await prisma.$transaction(async (tx) => {
+            await tx.patent.update({
+                where: { id: patentId },
+                data: buildPatentData(req.body, req.body.userId, { partial: true })
+            });
+
+            if (req.body.inventors !== undefined) {
+                await syncPatentInventors(tx, patentId, req.body.inventors);
+            }
+
+            return tx.patent.findUnique({
+                where: { id: patentId },
+                include: patentInclude
+            });
         });
 
         res.status(200).json({
             success: true,
-            data: updatedPatent
+            data: formatPatent(updatedPatent)
         });
     } catch (error) {
         res.status(500).json({
@@ -274,7 +422,10 @@ const deletePatent = async (req, res) => {
 const getPatentById = async (req, res) => {
     try{
         const {id} = req.params;
-        const patent = await prisma.patent.findUnique({where: {id: parseInt(id)}});
+        const patent = await prisma.patent.findUnique({
+            where: {id: parseInt(id)},
+            include: patentInclude
+        });
         if(!patent){
             return res.status(404).json({
                 success: false,
@@ -283,7 +434,7 @@ const getPatentById = async (req, res) => {
         }
         return res.status(200).json({
             success: true,
-            data: patent
+            data: formatPatent(patent)
         });
     }catch(error){
         res.status(500).json({

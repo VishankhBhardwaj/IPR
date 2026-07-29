@@ -23,6 +23,13 @@ enum PatentStatus {
     GRANTED
 }
 
+enum Designation {
+    STUDENT
+    ASSISTANT_PROFESSOR
+    ASSOCIATE_PROFESSOR
+    PROFESSOR
+}
+
 
 
 model User {
@@ -78,6 +85,7 @@ model Patent{
   
   userId      Int
   user        User       @relation(fields: [userId], references: [id])
+  inventors   PatentInventor[]
 
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
@@ -86,4 +94,41 @@ model Patent{
   @@index([patentType, year, status])
   @@index([patentType, country, status])
   @@index([userId])
+}
+
+model PatentInventor {
+  id          Int         @id @default(autoincrement())
+  name        String      @db.VarChar(255)
+  designation Designation
+
+  patentId    Int
+  patent      Patent      @relation(fields: [patentId], references: [id], onDelete: Cascade)
+
+  departments InventorDepartment[]
+
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@index([patentId])
+  @@index([designation])
+}
+
+model Department {
+  id          Int                  @id @default(autoincrement())
+  name        String               @unique @db.VarChar(120)
+  inventors   InventorDepartment[]
+
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+}
+
+model InventorDepartment {
+  inventorId   Int
+  departmentId Int
+
+  inventor     PatentInventor @relation(fields: [inventorId], references: [id], onDelete: Cascade)
+  department   Department     @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+
+  @@id([inventorId, departmentId])
+  @@index([departmentId])
 }

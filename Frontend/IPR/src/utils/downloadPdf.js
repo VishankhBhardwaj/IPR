@@ -85,6 +85,26 @@ const formatDateForPdf = (value) => {
   return parsedDate.toLocaleDateString("en-GB");
 };
 
+const formatInventorsForPdf = (patent) => {
+  if (!patent.inventors?.length) {
+    return patent.inventorName || "-";
+  }
+
+  return patent.inventors
+    .map((inventor) => {
+      const designation = (inventor.designation || "")
+        .replaceAll("_", " ")
+        .toLowerCase()
+        .replace(/\b\w/g, (letter) => letter.toUpperCase());
+      const departments = inventor.departments?.length
+        ? ` (${inventor.departments.join(", ")})`
+        : "";
+
+      return `${inventor.name} - ${designation}${departments}`;
+    })
+    .join("\n");
+};
+
 export const downloadPatentsPDF = (patents = []) => {
   const doc = new jsPDF({ orientation: "landscape" });
 
@@ -100,7 +120,7 @@ export const downloadPatentsPDF = (patents = []) => {
       "Application No.",
       "Title",
       "Applicant",
-      "Inventor",
+      "Inventors / Designation / Departments",
       "Year",
       "Status",
       "Type",
@@ -114,7 +134,7 @@ export const downloadPatentsPDF = (patents = []) => {
     patent.applicationNo || "-",
     patent.patentTitle || "-",
     patent.applicantName || "-",
-    patent.inventorName || "-",
+    formatInventorsForPdf(patent),
     patent.year ?? "-",
     patent.status || "-",
     patent.patentType || "-",
@@ -140,9 +160,9 @@ export const downloadPatentsPDF = (patents = []) => {
     },
     columnStyles: {
       0: { cellWidth: 30 },
-      1: { cellWidth: 48 },
-      2: { cellWidth: 34 },
-      3: { cellWidth: 34 },
+      1: { cellWidth: 42 },
+      2: { cellWidth: 30 },
+      3: { cellWidth: 44 },
       4: { cellWidth: 14 },
       5: { cellWidth: 20 },
       6: { cellWidth: 16 },

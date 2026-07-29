@@ -5,6 +5,10 @@ import Button from './Button';
 import './PatentCard.css';
 
 const PatentCard = ({ patent, onDelete }) => {
+  const inventorSummary = patent.inventors?.length
+    ? patent.inventors.map((inventor) => inventor.name).join(', ')
+    : patent.inventorName;
+
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
       case 'published': return 'badge-success';
@@ -37,8 +41,20 @@ const PatentCard = ({ patent, onDelete }) => {
         </div>
         <div className="info-row">
           <User size={16} className="info-icon" />
-          <span><strong>Inventor:</strong> {patent.inventorName}</span>
+          <span><strong>Inventors:</strong> {inventorSummary || 'N/A'}</span>
         </div>
+        {patent.inventors?.length > 0 && (
+          <div className="inventor-chip-row">
+            {patent.inventors.slice(0, 3).map((inventor) => (
+              <span className="inventor-chip" key={inventor.id || inventor.name}>
+                {inventor.designation?.replaceAll('_', ' ')}
+              </span>
+            ))}
+            {patent.inventors.length > 3 && (
+              <span className="inventor-chip">+{patent.inventors.length - 3}</span>
+            )}
+          </div>
+        )}
         <div className="info-row">
           <Calendar size={16} className="info-icon" />
           <span><strong>Filed:</strong> {formatDate(patent.filedDate)}</span>

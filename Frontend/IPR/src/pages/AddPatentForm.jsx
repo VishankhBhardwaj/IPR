@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Plus, Trash2 } from 'lucide-react';
 import { addPatent } from '../api/patentApi';
 import Button from '../components/Button';
 import './AddPatentForm.css';
@@ -18,10 +19,16 @@ const DEPARTMENTS = [
   { value: 'AI&DS', label: 'AI and Data Science (AI&DS)' },
 ];
 
+const emptyInventor = {
+  name: '',
+  designation: 'STUDENT',
+  departments: '',
+};
+
 const initialFormState = {
   applicationNo: '',
   status: 'PUBLISHED',
-  inventorName: '',
+  inventors: [{ ...emptyInventor }],
   patentTitle: '',
   applicantName: '',
   filedDate: '',
@@ -52,6 +59,31 @@ const AddPatentForm = () => {
     }));
   };
 
+  const handleInventorChange = (index, field, value) => {
+    setFormData((prev) => ({
+      ...prev,
+      inventors: prev.inventors.map((inventor, currentIndex) => (
+        currentIndex === index ? { ...inventor, [field]: value } : inventor
+      )),
+    }));
+  };
+
+  const addInventorRow = () => {
+    setFormData((prev) => ({
+      ...prev,
+      inventors: [...prev.inventors, { ...emptyInventor }],
+    }));
+  };
+
+  const removeInventorRow = (index) => {
+    setFormData((prev) => ({
+      ...prev,
+      inventors: prev.inventors.length === 1
+        ? prev.inventors
+        : prev.inventors.filter((_, currentIndex) => currentIndex !== index),
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -63,6 +95,14 @@ const AddPatentForm = () => {
         ...formData,
         filedDate: formData.filedDate ? new Date(formData.filedDate).toISOString() : null,
         publicationDate: formData.publicationDate ? new Date(formData.publicationDate).toISOString() : null,
+        inventors: formData.inventors.map((inventor) => ({
+          name: inventor.name.trim(),
+          designation: inventor.designation,
+          departments: inventor.departments
+            .split(',')
+            .map((department) => department.trim())
+            .filter(Boolean),
+        })),
       };
 
       const res = await addPatent(dataToSubmit);
@@ -128,19 +168,6 @@ const AddPatentForm = () => {
             />
           </div>
 
-          {/* Row 2 */}
-          <div className="form-group">
-            <label htmlFor="inventorName">Inventor Name *</label>
-            <input
-              type="text"
-              id="inventorName"
-              name="inventorName"
-              value={formData.inventorName}
-              onChange={handleChange}
-              required
-            />
-          </div>
-
           <div className="form-group">
             <label htmlFor="applicantName">Applicant Name *</label>
             <input
@@ -152,6 +179,78 @@ const AddPatentForm = () => {
               required
             />
           </div>
+
+          <section className="inventors-section">
+            <div className="inventors-section-header">
+              <div>
+                <h3>Inventors</h3>
+                <p>Add each inventor separately with designation and departments.</p>
+              </div>
+              <Button type="button" variant="outline" size="sm" onClick={addInventorRow}>
+                <Plus size={16} />
+                Add
+              </Button>
+            </div>
+
+            <div className="inventor-list">
+              {formData.inventors.map((inventor, index) => (
+                <div className="inventor-entry" key={`inventor-${index}`}>
+                  <div className="inventor-entry-title">
+                    <span>Inventor {index + 1}</span>
+                    <button
+                      type="button"
+                      onClick={() => removeInventorRow(index)}
+                      disabled={formData.inventors.length === 1}
+                      aria-label={`Remove inventor ${index + 1}`}
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+
+                  <div className="inventor-fields">
+                    <div className="form-group">
+                      <label htmlFor={`inventor-name-${index}`}>Name *</label>
+                      <input
+                        id={`inventor-name-${index}`}
+                        type="text"
+                        value={inventor.name}
+                        onChange={(e) => handleInventorChange(index, 'name', e.target.value)}
+                        required
+                        placeholder="Inventor full name"
+                      />
+                    </div>
+
+                    <div className="form-group">
+                      <label htmlFor={`inventor-designation-${index}`}>Designation *</label>
+                      <select
+                        id={`inventor-designation-${index}`}
+                        value={inventor.designation}
+                        onChange={(e) => handleInventorChange(index, 'designation', e.target.value)}
+                        required
+                      >
+                        <option value="STUDENT">Student</option>
+                        <option value="ASSISTANT_PROFESSOR">Assistant Professor</option>
+                        <option value="ASSOCIATE_PROFESSOR">Associate Professor</option>
+                        <option value="PROFESSOR">Professor</option>
+                      </select>
+                    </div>
+
+                    <div className="form-group full-width">
+                      <label htmlFor={`inventor-departments-${index}`}>Departments *</label>
+                      <input
+                        id={`inventor-departments-${index}`}
+                        type="text"
+                        value={inventor.departments}
+                        onChange={(e) => handleInventorChange(index, 'departments', e.target.value)}
+                        required
+                        placeholder="CSE, IT, ECE"
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
 
           {/* Row 3 */}
           <div className="form-group">
