@@ -1,2 +1,1 @@
--- AddForeignKey
-ALTER TABLE `Patent` ADD CONSTRAINT `Patent_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+-- This migration is emptied because the foreign key Patent_userId_fkey was already added in the init migration.
