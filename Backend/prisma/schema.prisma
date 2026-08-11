@@ -67,8 +67,6 @@ model Patent{
   
   publicationNo String @unique
   
-  institueAffiliation String @db.Text
-  
   driveLink   String @db.Text
   
   year        Int
@@ -100,6 +98,8 @@ model PatentInventor {
   id          Int         @id @default(autoincrement())
   name        String      @db.VarChar(255)
   designation Designation
+
+  instituteAffiliation String @db.Text @default("")
 
   patentId    Int
   patent      Patent      @relation(fields: [patentId], references: [id], onDelete: Cascade)
