@@ -1,21 +1,10 @@
 import dotenv from "dotenv";
 dotenv.config();
 import { PrismaClient } from "@prisma/client";
-import { PrismaMariaDb } from "@prisma/adapter-mariadb";
 import xlsx from "xlsx";
 import bcrypt from "bcrypt";
 
-const password = process.env.DB_PASSWORD;
-
-const adapter = new PrismaMariaDb({
-  host: "localhost",
-  port: Number(process.env.DB_PORT),
-  user: "root",
-  password: password,
-  database: "ipr_db",
-});
-
-const prisma = new PrismaClient({ adapter });
+const prisma = new PrismaClient();
 
 function excelDateToJSDate(serial) {
   if (!serial || isNaN(serial)) return new Date();
@@ -81,46 +70,21 @@ function parseInventors(inventorStr) {
 }
 
 async function main() {
-  console.log("Truncating previous patent and user data...");
+  console.log("Truncating previous patent and department data...");
   await prisma.inventorDepartment.deleteMany();
   await prisma.patentInventor.deleteMany();
   await prisma.department.deleteMany();
   await prisma.patent.deleteMany();
-  await prisma.user.deleteMany();
+  // await prisma.user.deleteMany();
 
   console.log("Resetting database auto-increment counters to 1...");
-  await prisma.$executeRawUnsafe('ALTER TABLE User AUTO_INCREMENT = 1;');
+  // await prisma.$executeRawUnsafe('ALTER TABLE User AUTO_INCREMENT = 1;');
   await prisma.$executeRawUnsafe('ALTER TABLE Patent AUTO_INCREMENT = 1;');
   await prisma.$executeRawUnsafe('ALTER TABLE PatentInventor AUTO_INCREMENT = 1;');
   await prisma.$executeRawUnsafe('ALTER TABLE Department AUTO_INCREMENT = 1;');
 
-  console.log("Creating standard users (Admin, Faculty, Student)...");
-  const admin = await prisma.user.create({
-    data: {
-      name: "Admin User",
-      email: "admin@example.com",
-      password: await bcrypt.hash("admin123", 10),
-      role: "ADMIN",
-    },
-  });
-
-  const faculty = await prisma.user.create({
-    data: {
-      name: "Dr. John Smith",
-      email: "faculty@example.com",
-      password: await bcrypt.hash("faculty123", 10),
-      role: "FACULTY",
-    },
-  });
-
-  const student = await prisma.user.create({
-    data: {
-      name: "Alice Johnson",
-      email: "student@example.com",
-      password: await bcrypt.hash("student123", 10),
-      role: "STUDENT",
-    },
-  });
+  const firstUser = await prisma.user.findFirst();
+  let defaultUserId = firstUser ? firstUser.id : 1;
 
   console.log("Creating standard departments...");
   const csDept = await prisma.department.create({ data: { name: "Computer Science" } });
@@ -173,15 +137,7 @@ async function main() {
       const publicationDate = parseExcelOrStrDate(row[pubDateKey]);
 
       // Determine patent owner based on inventor name
-      let userId;
-      const lowerInventor = String(row['Inventor/s Name'] || '').toLowerCase();
-      if (lowerInventor.includes('dr.') || lowerInventor.includes('prof.')) {
-        userId = faculty.id;
-      } else if (lowerInventor.includes('alice') || lowerInventor.includes('johnson') || lowerInventor.includes('student')) {
-        userId = student.id;
-      } else {
-        userId = (successCount % 2 === 0) ? admin.id : student.id;
-      }
+      let userId = defaultUserId;
 
       const title = String(row['Title of the Patent'] || '');
 

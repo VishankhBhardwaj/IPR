@@ -9,6 +9,12 @@ const PatentCard = ({ patent, onDelete }) => {
     ? patent.inventors.map((inventor) => inventor.name).join(', ')
     : patent.inventorName;
 
+  const userRole = localStorage.getItem('role');
+  const loggedInUserId = localStorage.getItem('userId');
+  const isAdmin = userRole === 'ADMIN';
+  const isOwner = loggedInUserId && parseInt(loggedInUserId, 10) === patent.userId;
+  const canEditOrDelete = isAdmin || isOwner;
+
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
       case 'published': return 'badge-success';
@@ -80,14 +86,25 @@ const PatentCard = ({ patent, onDelete }) => {
           )}
         </div>
         
-        <Button 
-          variant="danger" 
-          size="sm" 
-          onClick={() => onDelete(patent.id)}
-          title="Delete Patent"
-        >
-          <Trash2 size={16} />
-        </Button>
+        <div style={{ display: 'flex', gap: '0.5rem' }}>
+          {canEditOrDelete && (
+            <>
+              <Link to={`/edit-patent/${patent.id}`}>
+                <Button variant="outline" size="sm" title="Edit Patent">
+                  Edit
+                </Button>
+              </Link>
+              <Button 
+                variant="danger" 
+                size="sm" 
+                onClick={() => onDelete(patent.id)}
+                title="Delete Patent"
+              >
+                <Trash2 size={16} />
+              </Button>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );

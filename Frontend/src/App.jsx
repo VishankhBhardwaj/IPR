@@ -72,6 +72,7 @@ function App() {
             <Route path="/" element={<ProtectedRoute isAuthed={authed}><Dashboard /></ProtectedRoute>} />
             <Route path="/analysis" element={<ProtectedRoute isAuthed={authed}><Analysis /></ProtectedRoute>} />
             <Route path="/add-patent" element={<ProtectedRoute isAuthed={authed}><AddPatentForm /></ProtectedRoute>} />
+            <Route path="/edit-patent/:id" element={<ProtectedRoute isAuthed={authed}><AddPatentForm /></ProtectedRoute>} />
             <Route path="/patent/:id" element={<ProtectedRoute isAuthed={authed}><PatentDetails /></ProtectedRoute>} />
             <Route path="/admin" element={<AdminRoute isAuthed={authed} role={userRole}><Admin /></AdminRoute>} />
 

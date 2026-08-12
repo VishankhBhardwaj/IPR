@@ -4,7 +4,7 @@ const { generateToken } = require("../lib/token");
 
 const registerUser = async(req,res)=>{
     try{
-        const {name,email,password,role,department} = req.body;
+        const {name,email,password,role,department,designation} = req.body;
         if(!name || !email || !password){
             return res.status(400).json({
                 success:false,
@@ -29,7 +29,8 @@ const registerUser = async(req,res)=>{
                 email:email,
                 password:hashedPassword,
                 role: role || "STUDENT",
-                department: department || null
+                department: department || null,
+                designation: designation || null
             }
         })
         const token = generateToken(newUser.id);
@@ -43,7 +44,8 @@ const registerUser = async(req,res)=>{
             success:true,
             message:"User registered successfully",
             token:token,
-            role: newUser.role
+            role: newUser.role,
+            userId: newUser.id
         })
     }catch(error){
         console.error("Error in registerUser:", error);
@@ -91,7 +93,8 @@ const loginUser = async(req,res)=>{
             success:true,
             message:"User logged in successfully",
             token:token,
-            role: user.role
+            role: user.role,
+            userId: user.id
         })
     }catch(error){
         console.error("Error in loginUser:", error);

@@ -58,41 +58,17 @@ function parseExcelOrStrDate(val) {
 }
 
 async function main() {
-  console.log("Truncating previous patent and user data...");
+  console.log("Truncating previous patent data...");
   await prisma.patent.deleteMany();
-  await prisma.user.deleteMany();
+  // await prisma.user.deleteMany();
 
   console.log("Resetting database auto-increment counters to 1...");
-  await prisma.$executeRawUnsafe('ALTER TABLE User AUTO_INCREMENT = 1;');
+  // await prisma.$executeRawUnsafe('ALTER TABLE User AUTO_INCREMENT = 1;');
   await prisma.$executeRawUnsafe('ALTER TABLE Patent AUTO_INCREMENT = 1;');
 
-  console.log("Creating standard users (Admin, Faculty, Student)...");
-  const admin = await prisma.user.create({
-    data: {
-      name: "Admin User",
-      email: "admin@example.com",
-      password: await bcrypt.hash("admin123", 10),
-      role: "ADMIN",
-    },
-  });
+  const firstUser = await prisma.user.findFirst();
+  let defaultUserId = firstUser ? firstUser.id : 1;
 
-  const faculty = await prisma.user.create({
-    data: {
-      name: "Dr. John Smith",
-      email: "faculty@example.com",
-      password: await bcrypt.hash("faculty123", 10),
-      role: "FACULTY",
-    },
-  });
-
-  const student = await prisma.user.create({
-    data: {
-      name: "Alice Johnson",
-      email: "student@example.com",
-      password: await bcrypt.hash("student123", 10),
-      role: "STUDENT",
-    },
-  });
 
   const wb = xlsx.readFile('../IPR_Data_For_Project.xlsx');
   const sheetName = wb.SheetNames[0];
@@ -120,16 +96,7 @@ async function main() {
       const publicationDate = parseExcelOrStrDate(row[pubDateKey]);
 
       // Determine patent owner based on inventor name
-      let userId;
-      const lowerInventor = String(row['Inventor/s Name'] || '').toLowerCase();
-      if (lowerInventor.includes('dr.') || lowerInventor.includes('prof.')) {
-        userId = faculty.id;
-      } else if (lowerInventor.includes('alice') || lowerInventor.includes('johnson') || lowerInventor.includes('student')) {
-        userId = student.id;
-      } else {
-        // Alternate between admin and student roles for non-faculty patents
-        userId = (successCount % 2 === 0) ? admin.id : student.id;
-      }
+      let userId = defaultUserId;
 
       await prisma.patent.upsert({
         where: { applicationNo: applicationNo },
@@ -143,7 +110,6 @@ async function main() {
           filedDate: filedDate,
           publicationDate: publicationDate,
           publicationNo: publicationNo || applicationNo,
-          institueAffiliation: String(row['Institute Affiliation'] || ''),
           driveLink: String(row['Drive Link'] || ''),
           year: parseInt(row['Year'] || new Date().getFullYear()),
           patentType: patentType,

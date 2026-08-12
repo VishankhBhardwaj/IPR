@@ -5,6 +5,49 @@ import Button from '../components/Button';
 import { downloadPatentsPDF } from '../utils/downloadPdf';
 import './Dashboard.css';
 
+// Fuzzy matching helpers
+const levenshteinDistance = (s1, s2) => {
+  const m = s1.length, n = s2.length;
+  if (!m) return n;
+  if (!n) return m;
+  const d = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
+  for (let i = 0; i <= m; i++) d[i][0] = i;
+  for (let j = 0; j <= n; j++) d[0][j] = j;
+  for (let j = 1; j <= n; j++) {
+    for (let i = 1; i <= m; i++) {
+      if (s1[i - 1] === s2[j - 1]) d[i][j] = d[i - 1][j - 1];
+      else d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + 1);
+    }
+  }
+  return d[m][n];
+};
+
+const fuzzyMatchWord = (searchWord, targetWord) => {
+  // Exact match or search word is a substring of the target word
+  if (targetWord.includes(searchWord)) return true;
+  
+  // Do not allow fuzzy match for very short search words to prevent false positives
+  if (searchWord.length <= 2) return false;
+
+  // Allow 1 typo for words up to 4 chars, 2 typos for longer words
+  const maxTypos = Math.max(1, Math.floor(searchWord.length / 4));
+  return levenshteinDistance(searchWord, targetWord) <= maxTypos;
+};
+
+const fuzzyMatchName = (searchQuery, targetName) => {
+  if (!targetName) return false;
+  const searchWords = searchQuery.toLowerCase().replace(/[^a-z0-9]/g, ' ').split(/\s+/).filter(Boolean);
+  const targetWords = targetName.toLowerCase().replace(/[^a-z0-9]/g, ' ').split(/\s+/).filter(Boolean);
+  
+  if (searchWords.length === 0) return true;
+  if (targetWords.length === 0) return false;
+  
+  // Every search word should match at least one target word
+  return searchWords.every(sWord => 
+    targetWords.some(tWord => fuzzyMatchWord(sWord, tWord))
+  );
+};
+
 const Dashboard = () => {
   // Stores the complete, unfiltered dataset fetched once from the API
   const [allPatents, setAllPatents] = useState([]);
@@ -14,7 +57,9 @@ const Dashboard = () => {
     year: '',
     applicationNo: '',
     status: '',
-    patentType: ''
+    patentType: '',
+    inventorName: '',
+    department: ''
   });
 
   // Fetch all patents once on mount — no re-fetching on filter changes
@@ -36,9 +81,14 @@ const Dashboard = () => {
         setError(null);
       } catch (err) {
         console.error('Error fetching patents:', err);
-
         if (isMounted) {
-          setError('Failed to load patents. Please check if the backend server is running.');
+          if (err.response && err.response.status === 401) {
+            localStorage.removeItem('token');
+            localStorage.removeItem('role');
+            window.location.href = '/auth';
+          } else {
+            setError('Failed to load patents. Please check if the backend server is running.');
+          }
         }
       } finally {
         if (isMounted) {
@@ -76,6 +126,20 @@ const Dashboard = () => {
       if (filters.patentType && patent.patentType !== filters.patentType) {
         return false;
       }
+      if (filters.inventorName) {
+        const searchName = filters.inventorName;
+        const mainInventorMatch = fuzzyMatchName(searchName, patent.inventorName);
+        const subInventorsMatch = patent.inventors?.some(inv => fuzzyMatchName(searchName, inv.name));
+        if (!mainInventorMatch && !subInventorsMatch) return false;
+      }
+      if (filters.department) {
+        const searchDept = filters.department.toLowerCase();
+        const mainDeptMatch = (patent.department || '').toLowerCase().includes(searchDept);
+        const subDeptMatch = patent.inventors?.some(inv => 
+          inv.departments?.some(d => (d || '').toLowerCase().includes(searchDept))
+        );
+        if (!mainDeptMatch && !subDeptMatch) return false;
+      }
       return true;
     });
   }, [allPatents, filters]);
@@ -100,7 +164,7 @@ const Dashboard = () => {
   return (
     <div className="dashboard container" style={{marginTop: '50px'}}>
       <div className="dashboard-header">
-        <h1>Patent Registry</h1>
+        <h1>IPR MAIT Patent Registry</h1>
         <p className="subtitle">Manage and track all intellectual property registrations.</p>
       </div>
 
@@ -148,6 +212,34 @@ const Dashboard = () => {
               <option value="DESIGN">Design</option>
             </select>
           </div>
+          <div className="filter-group">
+            <label>Inventor Name</label>
+            <input
+              type="text"
+              placeholder="e.g. John Doe"
+              value={filters.inventorName}
+              onChange={(e) => setFilters({ ...filters, inventorName: e.target.value })}
+            />
+          </div>
+          <div className="filter-group">
+            <label>Department</label>
+            <select
+              value={filters.department}
+              onChange={(e) => setFilters({ ...filters, department: e.target.value })}
+            >
+              <option value="">All</option>
+              <option value="CSE">Computer Science and Engineering (CSE)</option>
+              <option value="IT">Information Technology (IT)</option>
+              <option value="ECE">Electronics and Communication (ECE)</option>
+              <option value="MAE">Mechanical and Automation (MAE)</option>
+              <option value="EEE">Electrical and Electronics (EEE)</option>
+              <option value="CST">Computer Science and Technology (CST)</option>
+              <option value="ITE">Information Technology and Engineering (ITE)</option>
+              <option value="AI&ML">AI and Machine Learning (AI&ML)</option>
+              <option value="AI&DS">AI and Data Science (AI&DS)</option>
+              <option value="Applied Sciences">Applied Sciences</option>
+            </select>
+          </div>
           <div className="filter-actions">
             <Button
               type="button"
@@ -161,7 +253,7 @@ const Dashboard = () => {
               type="button"
               variant="outline"
               onClick={() => {
-                setFilters({ year: '', applicationNo: '', status: '', patentType: '' });
+                setFilters({ year: '', applicationNo: '', status: '', patentType: '', inventorName: '', department: '' });
               }}
             >
               Clear

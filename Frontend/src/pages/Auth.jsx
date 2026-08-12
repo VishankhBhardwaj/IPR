@@ -39,6 +39,15 @@ const DEPARTMENTS = [
   { value: 'ITE', label: 'Information Technology and Engineering (ITE)' },
   { value: 'AI&ML', label: 'AI and Machine Learning (AI&ML)' },
   { value: 'AI&DS', label: 'AI and Data Science (AI&DS)' },
+  { value: 'Applied Sciences', label: 'Applied Sciences' },
+];
+
+const DESIGNATIONS = [
+  { value: '', label: 'Select Designation', disabled: true },
+  { value: 'STUDENT', label: 'Student' },
+  { value: 'ASSISTANT_PROFESSOR', label: 'Assistant Professor' },
+  { value: 'ASSOCIATE_PROFESSOR', label: 'Associate Professor' },
+  { value: 'PROFESSOR', label: 'Professor' },
 ];
 
 
@@ -56,6 +65,7 @@ const Auth = ({ onAuthSuccess }) => {
     password: '',
     role: '',
     department: '',
+    designation: '',
   });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -63,7 +73,7 @@ const Auth = ({ onAuthSuccess }) => {
   /* ---------------------------------------------------------------- */
   const switchMode = (next) => {
     setMode(next);
-    setForm({ name: '', email: '', password: '', role: '', department: '' });
+    setForm({ name: '', email: '', password: '', role: '', department: '', designation: '' });
   };
 
   const handleChange = (e) => {
@@ -116,6 +126,7 @@ const Auth = ({ onAuthSuccess }) => {
           password: form.password,
           role: form.role,         // ADMIN | FACULTY | STUDENT
           department: form.role === 'ADMIN' ? '' : form.department,
+          designation: form.role === 'ADMIN' ? '' : form.designation,
         });
       }
 
@@ -126,6 +137,9 @@ const Auth = ({ onAuthSuccess }) => {
       }
       if (data && data.role) {
         localStorage.setItem('role', data.role);
+      }
+      if (data && data.userId) {
+        localStorage.setItem('userId', data.userId);
       }
 
       toast.dismiss(loadingToastId);
@@ -158,7 +172,7 @@ const Auth = ({ onAuthSuccess }) => {
         {/* ---- Brand header ---- */}
         <div className="auth-logo">
           <ShieldCheck size={30} className="auth-logo-icon" />
-          <span className="auth-logo-text">IPR Portal</span>
+          <span className="auth-logo-text">IPR MAIT Portal</span>
         </div>
         <p className="auth-tagline">
           {mode === 'login'
@@ -304,6 +318,31 @@ const Auth = ({ onAuthSuccess }) => {
                   disabled={loading}
                 >
                   {DEPARTMENTS.map((d) => (
+                    <option key={d.value} value={d.value} disabled={d.disabled}>{d.label}</option>
+                  ))}
+                </select>
+                <span style={{ position: 'absolute', right: '0.85rem', color: 'var(--text-tertiary)', pointerEvents: 'none' }}>
+                  <ChevronDown size={16} />
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* Designation — register only and NOT admin */}
+          {mode === 'register' && form.role && form.role !== 'ADMIN' && (
+            <div className="auth-field">
+              <label htmlFor="auth-designation" className="auth-label">Designation</label>
+              <div className="auth-input-wrap">
+                <span className="auth-input-icon"><User size={16} /></span>
+                <select
+                  id="auth-designation"
+                  name="designation"
+                  value={form.designation}
+                  onChange={handleChange}
+                  className="auth-select"
+                  disabled={loading}
+                >
+                  {DESIGNATIONS.map((d) => (
                     <option key={d.value} value={d.value} disabled={d.disabled}>{d.label}</option>
                   ))}
                 </select>
