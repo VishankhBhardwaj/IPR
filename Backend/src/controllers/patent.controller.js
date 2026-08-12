@@ -1,6 +1,6 @@
 const prisma = require("../config/prisma");
 
-const STATUS_COLUMNS = ["GRANTED", "PUBLISHED"];
+const STATUS_COLUMNS = ["GRANTED", "PUBLISHED", "APPLIED"];
 const TYPE_COLUMNS = ["DESIGN", "UTILITY"];
 
 const patentInclude = {
@@ -29,6 +29,7 @@ const normalizeStatus = (value) => {
     if (!status) return undefined;
     if (status.startsWith("GRANT")) return "GRANTED";
     if (status.startsWith("PUBLISH")) return "PUBLISHED";
+    if (status.startsWith("APPLI") || status === "APPLIED") return "APPLIED";
     return status;
 };
 
@@ -288,11 +289,17 @@ const buildPatentData = (body, userId, { partial = false } = {}) => {
     }
 
     if (!partial || body.filedDate !== undefined) {
-        data.filedDate = parseRequiredDate(body.filedDate, "filedDate");
+        if (body.filedDate) {
+            data.filedDate = parseRequiredDate(body.filedDate, "filedDate");
+        }
     }
 
     if (!partial || body.publicationDate !== undefined) {
-        data.publicationDate = parseRequiredDate(body.publicationDate, "publicationDate");
+        if (body.publicationDate) {
+            data.publicationDate = parseRequiredDate(body.publicationDate, "publicationDate");
+        } else {
+            data.publicationDate = null;
+        }
     }
 
     if (userId) {
@@ -332,8 +339,6 @@ const addPatent = async (req, res) => {
             !req.body.patentTitle ||
             !req.body.applicantName ||
             !req.body.filedDate ||
-            !req.body.publicationDate ||
-            !req.body.publicationNo ||
             !req.body.institueAffiliation ||
             !req.body.driveLink ||
             !req.body.year ||
@@ -407,6 +412,24 @@ const updatePatent = async (req, res) => {
 const deletePatent = async (req, res) => {
     try {
         const { id } = req.params;
+        const userId = req.userId; // Provided by auth middleware
+
+        const patent = await prisma.patent.findUnique({
+            where: { id: parseInt(id) }
+        });
+
+        if (!patent) {
+            return res.status(404).json({ success: false, message: "Patent not found" });
+        }
+
+        const user = await prisma.user.findUnique({
+            where: { id: userId }
+        });
+
+        if (user.role !== "ADMIN" && patent.userId !== userId) {
+            return res.status(403).json({ success: false, message: "Forbidden: You are not authorized to delete this patent" });
+        }
+
         const deletedPatent = await prisma.patent.delete({where: { id: parseInt(id) }});
         res.status(200).json({
             success: true,

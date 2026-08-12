@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000',
+  baseURL: import.meta.env.VITE_API_URL || '',
   withCredentials: true,
 });
 
@@ -18,7 +18,7 @@ api.interceptors.request.use((config) => {
  * Body: { name, email, password, role, department }
  */
 export const register = async ({ name, email, password, role, department }) => {
-  const response = await api.post('/auth/register', { name, email, password, role, department });
+  const response = await api.post('/api/auth/register', { name, email, password, role, department });
   return response.data;
 };
 
@@ -27,6 +27,6 @@ export const register = async ({ name, email, password, role, department }) => {
  * Body: { email, password }
  */
 export const login = async ({ email, password }) => {
-  const response = await api.post('/auth/login', { email, password });
+  const response = await api.post('/api/auth/login', { email, password });
   return response.data;
 };

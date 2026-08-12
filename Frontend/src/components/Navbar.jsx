@@ -20,7 +20,7 @@ const Navbar = ({ isDark, toggleTheme, onLogout, role }) => {
       <div className="navbar-container container">
         <Link to="/" className="navbar-logo" onClick={closeMenu}>
           <ShieldCheck className="logo-icon" size={28} />
-          <span>IPR Portal</span>
+          <span>IPR MAIT Portal</span>
         </Link>
         
         <button className="mobile-menu-btn" onClick={() => setIsMenuOpen(!isMenuOpen)}>

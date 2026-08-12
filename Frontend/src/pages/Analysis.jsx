@@ -148,11 +148,14 @@ const Analysis = () => {
         setError(response.message || "Unable to load analysis.");
       }
     } catch (err) {
-      setAnalysis(null);
-      setError(
-        err.response?.data?.message ||
-          "Failed to load analysis. Please check login and backend server.",
-      );
+      console.error('Error fetching analysis:', err);
+      if (err.response && err.response.status === 401) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('role');
+        window.location.href = '/auth';
+      } else {
+        setError('Failed to load analysis data.');
+      }
     } finally {
       setLoading(false);
     }

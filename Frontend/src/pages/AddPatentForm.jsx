@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Plus, Trash2 } from 'lucide-react';
-import { addPatent } from '../api/patentApi';
+import { addPatent, getPatentById, updatePatent } from '../api/patentApi';
 import Button from '../components/Button';
 import './AddPatentForm.css';
 import { Building, ChevronDown } from 'lucide-react';
@@ -17,6 +17,7 @@ const DEPARTMENTS = [
   { value: 'ITE', label: 'Information Technology and Engineering (ITE)' },
   { value: 'AI&ML', label: 'AI and Machine Learning (AI&ML)' },
   { value: 'AI&DS', label: 'AI and Data Science (AI&DS)' },
+  { value: 'Applied Sciences', label: 'Applied Sciences' },
 ];
 
 const emptyInventor = {
@@ -47,9 +48,51 @@ const initialFormState = {
 
 const AddPatentForm = () => {
   const navigate = useNavigate();
+  const { id } = useParams();
   const [formData, setFormData] = useState(initialFormState);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const isEditMode = Boolean(id);
+
+  React.useEffect(() => {
+    if (isEditMode) {
+      setLoading(true);
+      getPatentById(id)
+        .then((res) => {
+          if (res.success && res.data) {
+            const patent = res.data;
+            
+            let parsedInventors = [{ ...emptyInventor }];
+            if (patent.inventors?.length) {
+              parsedInventors = patent.inventors.map(inv => ({
+                ...inv,
+                departments: inv.departments?.join(', ') || ''
+              }));
+            } else if (patent.inventorName) {
+              const names = patent.inventorName.split(',').map(n => n.trim()).filter(n => n);
+              if (names.length > 0) {
+                parsedInventors = names.map(name => ({
+                  ...emptyInventor,
+                  name: name
+                }));
+              }
+            }
+
+            setFormData({
+              ...patent,
+              filedDate: patent.filedDate ? patent.filedDate.substring(0, 10) : '',
+              publicationDate: patent.publicationDate ? patent.publicationDate.substring(0, 10) : '',
+              inventors: parsedInventors
+            });
+          }
+        })
+        .catch((err) => {
+          console.error("Error fetching patent:", err);
+          setError("Failed to load patent data.");
+        })
+        .finally(() => setLoading(false));
+    }
+  }, [id, isEditMode]);
 
   const handleChange = (e) => {
     const { name, value, type } = e.target;
@@ -105,7 +148,12 @@ const AddPatentForm = () => {
         })),
       };
 
-      const res = await addPatent(dataToSubmit);
+      let res;
+      if (isEditMode) {
+        res = await updatePatent(id, dataToSubmit);
+      } else {
+        res = await addPatent(dataToSubmit);
+      }
       if (res) {
         navigate('/');
       }
@@ -120,8 +168,8 @@ const AddPatentForm = () => {
   return (
     <div className="add-patent-container container">
       <div className="form-header">
-        <h2>Register New Patent</h2>
-        <p>Enter the details of the new intellectual property.</p>
+        <h2>{isEditMode ? 'Edit Patent' : 'Register New Patent'}</h2>
+        <p>{isEditMode ? 'Update the details of the intellectual property.' : 'Enter the details of the new intellectual property.'}</p>
       </div>
 
       <form className="patent-form clean-panel animate-fade-in" onSubmit={handleSubmit}>
@@ -156,14 +204,13 @@ const AddPatentForm = () => {
           </div>
           
           <div className="form-group">
-            <label htmlFor="publicationNo">Publication/Grant Number *</label>
+            <label htmlFor="publicationNo">Publication/Grant Number</label>
             <input
               type="text"
               id="publicationNo"
               name="publicationNo"
               value={formData.publicationNo}
               onChange={handleChange}
-              required
               placeholder="PUB2026..."
             />
           </div>
@@ -256,6 +303,7 @@ const AddPatentForm = () => {
           <div className="form-group">
             <label htmlFor="status">Status *</label>
             <select id="status" name="status" value={formData.status} onChange={handleChange} required>
+              <option value="APPLIED">Applied</option>
               <option value="PUBLISHED">Published</option>
               <option value="GRANTED">Granted</option>
             </select>
@@ -283,14 +331,13 @@ const AddPatentForm = () => {
           </div>
 
           <div className="form-group">
-            <label htmlFor="publicationDate">Publication Date *</label>
+            <label htmlFor="publicationDate">Publication Date</label>
             <input
               type="date"
               id="publicationDate"
               name="publicationDate"
               value={formData.publicationDate}
               onChange={handleChange}
-              required
             />
           </div>
 
@@ -387,7 +434,7 @@ const AddPatentForm = () => {
             Cancel
           </Button>
           <Button type="submit" variant="primary" isLoading={loading}>
-            Register Patent
+            {isEditMode ? 'Update Patent' : 'Register Patent'}
           </Button>
         </div>
       </form>

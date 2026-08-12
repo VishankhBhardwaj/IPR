@@ -19,6 +19,7 @@ enum PatentType {
 }
 
 enum PatentStatus {
+    APPLIED
     PUBLISHED 
     GRANTED
 }
@@ -39,6 +40,7 @@ model User {
   password  String
   role      Role
   department String?
+  designation Designation?
 
   patents   Patent[]
 
@@ -63,9 +65,9 @@ model Patent{
   
   filedDate   DateTime
   
-  publicationDate DateTime
+  publicationDate DateTime?
   
-  publicationNo String @unique
+  publicationNo String? @unique
   
   driveLink   String @db.Text
   
@@ -99,7 +101,7 @@ model PatentInventor {
   name        String      @db.VarChar(255)
   designation Designation
 
-  instituteAffiliation String @db.Text @default("")
+  instituteAffiliation String @db.VarChar(255) @default("")
 
   patentId    Int
   patent      Patent      @relation(fields: [patentId], references: [id], onDelete: Cascade)

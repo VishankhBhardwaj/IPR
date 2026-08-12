@@ -15,5 +15,5 @@ app.use(cors({
 app.use(express.json());
 app.use(cookieParser());
 app.use("/api", patentRoutes);
-app.use("/auth",authRoutes);
+app.use("/api/auth", authRoutes);
 module.exports = app;
