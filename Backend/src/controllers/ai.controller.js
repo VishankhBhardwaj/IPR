@@ -23,3 +23,6 @@ const askDatabaseController = async(req,res)=>{
         });
     }
 };
+module.exports = {
+    askDatabaseController
+};
