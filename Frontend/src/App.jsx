@@ -7,6 +7,7 @@ import PatentDetails from './pages/PatentDetails';
 import Analysis from './pages/Analysis';
 import Auth from './pages/Auth';
 import Admin from './pages/Admin';
+import ChatBot from './components/ChatBot';
 
 /* ---- Small helper: check if user is authenticated ---- */
 const isAuthenticated = () => !!localStorage.getItem('token');
@@ -80,6 +81,9 @@ function App() {
             <Route path="*" element={<Navigate to={authed ? (userRole === 'ADMIN' ? '/admin' : '/') : '/auth'} replace />} />
           </Routes>
         </main>
+
+        {/* Global AI chatbot — visible on all authenticated pages */}
+        {authed && <ChatBot />}
       </div>
     </Router>
   );
