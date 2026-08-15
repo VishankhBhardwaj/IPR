@@ -213,6 +213,11 @@ const PatentDetails = () => {
                     <div>
                       <h4>{inventor.name}</h4>
                       <span>{formatDesignation(inventor.designation)}</span>
+                      {inventor.instituteAffiliation && (
+                        <span style={{ display: 'inline-block', marginTop: '4px', fontSize: '0.75rem', fontWeight: 600, padding: '2px 8px', borderRadius: '4px', background: 'rgba(59, 130, 246, 0.1)', color: 'var(--primary-color, #2563eb)' }}>
+                          {inventor.instituteAffiliation}
+                        </span>
+                      )}
                     </div>
                   </div>
                   <div className="department-chip-list">
