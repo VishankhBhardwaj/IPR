@@ -78,13 +78,15 @@ const parseInventors = (inventors) => {
             const name = cleanText(inventor.name);
             const designation = normalizeDesignation(inventor.designation);
             const departments = normalizeDepartments(inventor.departments);
+            const instituteAffiliation = cleanText(inventor.instituteAffiliation || inventor.affiliation) || "Not Specified";
 
             if (!name || !designation || departments.length === 0) return null;
 
             return {
                 name,
                 designation,
-                departments: [...new Set(departments)]
+                departments: [...new Set(departments)],
+                instituteAffiliation
             };
         })
         .filter(Boolean);
@@ -104,7 +106,8 @@ const formatPatent = (patent) => {
             id: inventor.id,
             name: inventor.name,
             designation: inventor.designation,
-            departments: (inventor.departments || []).map((item) => item.department.name)
+            instituteAffiliation: inventor.instituteAffiliation || "Not Specified",
+            departments: (inventor.departments || []).map((item) => item?.department?.name).filter(Boolean)
         }))
     };
 };
@@ -121,6 +124,7 @@ const syncPatentInventors = async (tx, patentId, inventors) => {
             data: {
                 name: inventor.name,
                 designation: inventor.designation,
+                instituteAffiliation: inventor.instituteAffiliation || "Not Specified",
                 patentId
             }
         });
@@ -250,7 +254,6 @@ const buildPatentData = (body, userId, { partial = false } = {}) => {
         "patentTitle",
         "applicantName",
         "publicationNo",
-        "institueAffiliation",
         "driveLink",
         "patentSession",
         "weblink",
@@ -430,7 +433,7 @@ const deletePatent = async (req, res) => {
             return res.status(403).json({ success: false, message: "Forbidden: You are not authorized to delete this patent" });
         }
 
-        const deletedPatent = await prisma.patent.delete({where: { id: parseInt(id) }});
+        const deletedPatent = await prisma.patent.delete({ where: { id: parseInt(id) } });
         res.status(200).json({
             success: true,
             data: deletedPatent
@@ -443,13 +446,13 @@ const deletePatent = async (req, res) => {
     }
 }
 const getPatentById = async (req, res) => {
-    try{
-        const {id} = req.params;
+    try {
+        const { id } = req.params;
         const patent = await prisma.patent.findUnique({
-            where: {id: parseInt(id)},
+            where: { id: parseInt(id) },
             include: patentInclude
         });
-        if(!patent){
+        if (!patent) {
             return res.status(404).json({
                 success: false,
                 message: "Patent not found"
@@ -459,7 +462,7 @@ const getPatentById = async (req, res) => {
             success: true,
             data: formatPatent(patent)
         });
-    }catch(error){
+    } catch (error) {
         res.status(500).json({
             success: false,
             message: error.message
