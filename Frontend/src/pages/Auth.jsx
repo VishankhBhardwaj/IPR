@@ -128,6 +128,7 @@ const Auth = ({ onAuthSuccess }) => {
           department: form.role === 'ADMIN' ? '' : form.department,
           designation: form.role === 'ADMIN' ? '' : form.designation,
         });
+        console.log(data)
       }
 
       /* Token is automatically handled via HttpOnly cookies from the backend, 

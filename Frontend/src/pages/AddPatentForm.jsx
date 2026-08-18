@@ -18,12 +18,35 @@ const DEPARTMENTS = [
   { value: 'AI&ML', label: 'AI and Machine Learning (AI&ML)' },
   { value: 'AI&DS', label: 'AI and Data Science (AI&DS)' },
   { value: 'Applied Sciences', label: 'Applied Sciences' },
+  { value: 'Others', label: 'Others' },
 ];
+
+const COUNTRY_OPTIONS = [
+  { value: '', label: 'Select Country', disabled: true },
+  { value: 'IN', label: 'India (IN)' },
+  { value: 'UK', label: 'United Kingdom (UK)' },
+  { value: 'Germany', label: 'Germany' },
+  { value: 'SA', label: 'South Africa (SA)' },
+  { value: 'Others', label: 'Others' },
+];
+
+const CURRENT_YEAR = new Date().getFullYear();
+const YEARS = Array.from({ length: CURRENT_YEAR - 2000 + 1 }, (_, i) => CURRENT_YEAR - i);
+
+const getSessionOptionsForYear = (yearVal) => {
+  if (!yearVal || isNaN(yearVal)) return [];
+  const y = Number(yearVal);
+  return [
+    `${y - 1}-${y.toString().slice(-2)}`,
+    `${y}-${(y + 1).toString().slice(-2)}`
+  ];
+};
 
 const emptyInventor = {
   name: '',
   designation: 'STUDENT',
   departments: '',
+  instituteAffiliation: '',
 };
 
 const initialFormState = {
@@ -37,11 +60,11 @@ const initialFormState = {
   publicationNo: '',
   institueAffiliation: '',
   driveLink: '',
-  year: new Date().getFullYear(),
+  year: '',
   patentType: 'UTILITY',
   patentSession: '',
   weblink: '',
-  country: 'India',
+  country: '',
   department: '',
   userId: 1 // Defaulting to 1 as per assumption since there is no auth
 };
@@ -52,6 +75,8 @@ const AddPatentForm = () => {
   const [formData, setFormData] = useState(initialFormState);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [isCustomYear, setIsCustomYear] = useState(false);
+  const [isCustomSession, setIsCustomSession] = useState(false);
   const isEditMode = Boolean(id);
 
   React.useEffect(() => {
@@ -66,7 +91,8 @@ const AddPatentForm = () => {
             if (patent.inventors?.length) {
               parsedInventors = patent.inventors.map(inv => ({
                 ...inv,
-                departments: inv.departments?.join(', ') || ''
+                departments: inv.departments?.join(', ') || '',
+                instituteAffiliation: inv.instituteAffiliation || ''
               }));
             } else if (patent.inventorName) {
               const names = patent.inventorName.split(',').map(n => n.trim()).filter(n => n);
@@ -78,16 +104,26 @@ const AddPatentForm = () => {
               }
             }
 
+            if (patent.year && !YEARS.includes(Number(patent.year))) {
+              setIsCustomYear(true);
+            }
+            const validSessions = getSessionOptionsForYear(patent.year);
+            if (patent.patentSession && !validSessions.includes(patent.patentSession)) {
+              setIsCustomSession(true);
+            }
+
             setFormData({
               ...patent,
               filedDate: patent.filedDate ? patent.filedDate.substring(0, 10) : '',
               publicationDate: patent.publicationDate ? patent.publicationDate.substring(0, 10) : '',
               inventors: parsedInventors
             });
+          } else {
+            setError("Patent not found");
           }
         })
         .catch((err) => {
-          console.error("Error fetching patent:", err);
+          console.error("Error loading patent details:", err);
           setError("Failed to load patent data.");
         })
         .finally(() => setLoading(false));
@@ -100,6 +136,35 @@ const AddPatentForm = () => {
       ...prev,
       [name]: type === 'number' ? Number(value) : value,
     }));
+  };
+
+  const handleYearSelectChange = (e) => {
+    const val = e.target.value;
+    if (val === 'OTHER') {
+      setIsCustomYear(true);
+      setFormData((prev) => ({ ...prev, year: '', patentSession: '' }));
+    } else {
+      setIsCustomYear(false);
+      const selectedYr = Number(val);
+      const defaultSession = `${selectedYr - 1}-${selectedYr.toString().slice(-2)}`;
+      setFormData((prev) => ({
+        ...prev,
+        year: selectedYr,
+        patentSession: defaultSession
+      }));
+      setIsCustomSession(false);
+    }
+  };
+
+  const handleSessionSelectChange = (e) => {
+    const val = e.target.value;
+    if (val === 'OTHER') {
+      setIsCustomSession(true);
+      setFormData((prev) => ({ ...prev, patentSession: '' }));
+    } else {
+      setIsCustomSession(false);
+      setFormData((prev) => ({ ...prev, patentSession: val }));
+    }
   };
 
   const handleInventorChange = (index, field, value) => {
@@ -141,6 +206,7 @@ const AddPatentForm = () => {
         inventors: formData.inventors.map((inventor) => ({
           name: inventor.name.trim(),
           designation: inventor.designation,
+          instituteAffiliation: inventor.instituteAffiliation,
           departments: inventor.departments
             .split(',')
             .map((department) => department.trim())
@@ -282,16 +348,34 @@ const AddPatentForm = () => {
                       </select>
                     </div>
 
+                    <div className="form-group">
+                      <label htmlFor={`inventor-affiliation-${index}`}>Institute Affiliation *</label>
+                      <select
+                        id={`inventor-affiliation-${index}`}
+                        value={inventor.instituteAffiliation || ''}
+                        onChange={(e) => handleInventorChange(index, 'instituteAffiliation', e.target.value)}
+                        required
+                      >
+                        <option value="" disabled>Select Affiliation</option>
+                        <option value="MAIT">MAIT</option>
+                        <option value="Others">Others</option>
+                      </select>
+                    </div>
+
                     <div className="form-group full-width">
-                      <label htmlFor={`inventor-departments-${index}`}>Departments *</label>
-                      <input
+                      <label htmlFor={`inventor-departments-${index}`}>Department *</label>
+                      <select
                         id={`inventor-departments-${index}`}
-                        type="text"
-                        value={inventor.departments}
+                        value={inventor.departments || ''}
                         onChange={(e) => handleInventorChange(index, 'departments', e.target.value)}
                         required
-                        placeholder="CSE, IT, ECE"
-                      />
+                      >
+                        {DEPARTMENTS.map((dept) => (
+                          <option key={dept.value} value={dept.value} disabled={dept.disabled}>
+                            {dept.label}
+                          </option>
+                        ))}
+                      </select>
                     </div>
                   </div>
                 </div>
@@ -356,14 +440,19 @@ const AddPatentForm = () => {
 
           <div className="form-group">
             <label htmlFor="country">Country *</label>
-            <input
-              type="text"
+            <select
               id="country"
               name="country"
               value={formData.country}
               onChange={handleChange}
               required
-            />
+            >
+              {COUNTRY_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value} disabled={opt.disabled}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
           </div>
 
           {/* Row 6 */}
@@ -395,27 +484,72 @@ const AddPatentForm = () => {
           
           <div className="form-group">
             <label htmlFor="year">Year *</label>
-            <input
-              type="number"
+            <select
               id="year"
-              name="year"
-              value={formData.year}
-              onChange={handleChange}
+              name="yearSelect"
+              value={isCustomYear ? 'OTHER' : (formData.year || '')}
+              onChange={handleYearSelectChange}
               required
-            />
+            >
+              <option value="" disabled>Select Year</option>
+              {YEARS.map((y) => (
+                <option key={y} value={y}>{y}</option>
+              ))}
+              <option value="OTHER">Other (Type Custom)</option>
+            </select>
+            {isCustomYear && (
+              <input
+                type="number"
+                id="customYear"
+                name="year"
+                value={formData.year || ''}
+                onChange={handleChange}
+                required
+                placeholder="e.g. 1995"
+                style={{ marginTop: '8px' }}
+              />
+            )}
           </div>
 
           <div className="form-group">
             <label htmlFor="patentSession">Session *</label>
-            <input
-              type="text"
-              id="patentSession"
-              name="patentSession"
-              value={formData.patentSession}
-              onChange={handleChange}
-              required
-              placeholder="e.g. 2025-26"
-            />
+            {(() => {
+              const activeSessions = getSessionOptionsForYear(formData.year);
+              const isDisabled = !formData.year && !isCustomYear;
+
+              return (
+                <>
+                  <select
+                    id="patentSession"
+                    name="sessionSelect"
+                    value={isCustomSession ? 'OTHER' : (formData.patentSession || '')}
+                    onChange={handleSessionSelectChange}
+                    required
+                    disabled={isDisabled}
+                  >
+                    <option value="" disabled>
+                      {isDisabled ? 'Select Year First' : 'Select Session'}
+                    </option>
+                    {activeSessions.map((s) => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                    <option value="OTHER">Other (Type Custom)</option>
+                  </select>
+                  {isCustomSession && (
+                    <input
+                      type="text"
+                      id="customSession"
+                      name="patentSession"
+                      value={formData.patentSession || ''}
+                      onChange={handleChange}
+                      required
+                      placeholder="e.g. 1995-96"
+                      style={{ marginTop: '8px' }}
+                    />
+                  )}
+                </>
+              );
+            })()}
           </div>
 
           <div className="form-group">
