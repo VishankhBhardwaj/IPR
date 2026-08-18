@@ -5,7 +5,7 @@ const patentRoutes = require("./routes/patent.routes");
 const authRoutes = require("./routes/auth.routes");
 const aiRoutes = require("./routes/ai.routes");
 const app = express();
-const deployedFrontendOrigin = "https://ipr-eoepby7yl-vishankhbhardwajs-projects.vercel.app";
+const deployedFrontendOrigin = "https://ipr-psi-six.vercel.app";
 const configuredOrigins = (process.env.CLIENT_URL || "")
     .split(",")
     .map((origin) => origin.trim().replace(/\/$/, ""))
