@@ -1,1 +1,0 @@
--- This migration is emptied because the foreign key Patent_userId_fkey was already added in the init migration.
