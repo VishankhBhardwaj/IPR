@@ -10,7 +10,7 @@ const corsOrigin = process.env.CLIENT_URL
     : process.env.NODE_ENV === "production" ? [] : true;
 
 app.use(cors({
-    origin: corsOrigin,
+    origin: [corsOrigin],
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"]
