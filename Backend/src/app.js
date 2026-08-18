@@ -5,12 +5,19 @@ const patentRoutes = require("./routes/patent.routes");
 const authRoutes = require("./routes/auth.routes");
 const aiRoutes = require("./routes/ai.routes");
 const app = express();
-const corsOrigin = process.env.CLIENT_URL
-    ? process.env.CLIENT_URL.split(",").map((origin) => origin.trim())
-    : process.env.NODE_ENV === "production" ? [] : true;
+const deployedFrontendOrigin = "https://ipr-eoepby7yl-vishankhbhardwajs-projects.vercel.app";
+const configuredOrigins = (process.env.CLIENT_URL || "")
+    .split(",")
+    .map((origin) => origin.trim().replace(/\/$/, ""))
+    .filter(Boolean);
+const allowedOrigins = [...new Set([
+    deployedFrontendOrigin,
+    "http://localhost:5173",
+    ...configuredOrigins,
+])];
 
 app.use(cors({
-    origin: [corsOrigin],
+    origin: allowedOrigins,
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"]
