@@ -1,0 +1,5 @@
+node_modules
+.env
+npm-debug.log
+IPR_Data_For_Project.xlsx
+patents_insert.sql

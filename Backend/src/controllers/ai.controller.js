@@ -2,14 +2,14 @@ const {askDatabase} = require("../ai/sqlAgent");
 
 const askDatabaseController = async(req,res)=>{
     try{
-        const {question} = req.body;
-        if(!question){
+        const {question} = req.body || {};
+        if(typeof question !== "string" || !question.trim()){
             return res.status(400).json({
                 success:false,
                 message:"Question is required"
             });
         }
-        const answer = await askDatabase(question);
+        const answer = await askDatabase(question.trim());
         return res.status(200).json({
             success:true,
             message:"Question answered successfully",

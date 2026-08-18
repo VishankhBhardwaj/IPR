@@ -21,26 +21,19 @@ async function getAgent() {
 
 
   const dataSource = new DataSource({
-    type: "mysql",
+    type: "postgres",
     host: process.env.DB_HOST,
-    port: Number(process.env.DB_PORT || 3305),
+    port: Number(process.env.DB_PORT || 5432),
     username: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
+    ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : undefined,
   });
 
   await dataSource.initialize();
 
   const db = await SqlDatabase.fromDataSourceParams({
     appDataSource: dataSource,
-
-    includesTables: [
-      "user",
-      "patent",
-      "patentinventor",
-      "department",
-      "inventordepartment",
-    ],
 
     sampleRowsInTableInfo: 1,
   });
