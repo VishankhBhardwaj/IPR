@@ -1,16 +1,51 @@
-# React + Vite
+# 🎨 IPR Portal — Frontend Application
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This directory contains the single-page application (SPA) client for the IPR (Intellectual Property Rights) Portal.
 
-Currently, two official plugins are available:
+Built with **React 19**, **Vite**, **React Router v7**, and **Vanilla CSS** with built-in Light/Dark mode theming.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+For complete project documentation, system architecture, database schema, and deployment instructions, see the main [Root README](../README.md).
 
-## React Compiler
+---
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## ⚡ Quick Start
 
-## Expanding the ESLint configuration
+### 1. Install Dependencies
+```bash
+npm install
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### 2. Environment Configuration
+Create a `.env` file in this directory:
+```env
+# Leave empty during local development to use Vite's automatic /api proxy to http://localhost:5000
+VITE_API_URL=
+```
+
+For production deployment:
+```env
+VITE_API_URL=https://your-api.example.com
+```
+
+### 3. Run Development Server
+```bash
+npm run dev
+```
+Access the application at `http://localhost:5173`.
+
+### 4. Build for Production
+```bash
+npm run build
+```
+The production bundle will be output to the `dist/` directory.
+
+---
+
+## 🧭 Key Features & Views
+
+- **Dashboard (`/`)**: Comprehensive patent registry with Levenshtein-distance fuzzy search, multifaceted filtering, and one-click PDF export.
+- **Analysis & Pivot Tables (`/analysis`)**: Server-side pivot tables and charts showing status breakdown by year and country, with PDF reporting.
+- **Add / Edit Patent (`/add-patent`, `/edit-patent/:id`)**: Form supporting structured inventor entries with designations and department tags.
+- **Patent Details (`/patent/:id`)**: Complete metadata view with inventor associations, official links, and Google Drive attachments.
+- **Admin Panel (`/admin`)**: Administrative registry and management console for privileged accounts.
+- **AI Database Assistant (ChatBot)**: Floating LangChain + Groq SQL agent interface to ask natural-language questions about patent data.
