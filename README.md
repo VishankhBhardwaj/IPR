@@ -470,3 +470,4 @@ The frontend is optimized for static hosting platforms like Vercel:
 ## 📄 License
 
 This project is licensed under the [ISC License](LICENSE).
+
