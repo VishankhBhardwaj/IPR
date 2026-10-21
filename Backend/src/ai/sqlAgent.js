@@ -58,13 +58,19 @@ console.log(result);
 
   const toolkit = new SqlToolkit(db, llm);
 
-  agentExecutor = createSqlAgent(
-    llm,
-    toolkit,
-    {
-      topK: 5,
-    }
-  );
+  // agentExecutor = createSqlAgent(
+  //   llm,
+  //   toolkit,
+  //   {
+  //     topK: 5,
+  //   }
+  // );
+  agentExecutor = createSqlAgent(llm, toolkit, {
+  topK: 5,
+  verbose: true,
+  maxIterations: 4,
+  handleParsingErrors: true,
+});
 
   return agentExecutor;
 }
