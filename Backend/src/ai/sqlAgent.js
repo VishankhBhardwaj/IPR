@@ -20,22 +20,13 @@ async function getAgent() {
   }
 
 
-  // const dataSource = new DataSource({
-  //   type: "postgres",
-  //   host: process.env.DB_HOST,
-  //   port: Number(process.env.DB_PORT || 5432),
-  //   username: process.env.DB_USER,
-  //   password: process.env.DB_PASSWORD,
-  //   database: process.env.DB_NAME,
-  //   ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : undefined,
-  // });
   const dataSource = new DataSource({
-  type: "postgres",
-  url: process.env.DATABASE_URL,
-  ssl: {
-    rejectUnauthorized: false,
-  },
-});
+    type: "postgres",
+    url: process.env.DATABASE_URL,
+    ssl: {
+      rejectUnauthorized: false,
+    },
+  });
   await dataSource.initialize();
   console.log("Database connected successfully");
 
@@ -46,31 +37,23 @@ const result = await dataSource.query(
 console.log(result);
   const db = await SqlDatabase.fromDataSourceParams({
     appDataSource: dataSource,
-
+    ignoreTables: ["User", "_prisma_migrations"],
     sampleRowsInTableInfo: 1,
   });
 
   const llm = new ChatGroq({
     apiKey: process.env.GROQ_API_KEY,
-    model: "openai/gpt-oss-120b",
+    model: "qwen/qwen3.8-27b",
     temperature: 0,
   });
 
   const toolkit = new SqlToolkit(db, llm);
 
-  // agentExecutor = createSqlAgent(
-  //   llm,
-  //   toolkit,
-  //   {
-  //     topK: 5,
-  //   }
-  // );
   agentExecutor = createSqlAgent(llm, toolkit, {
-  topK: 5,
-  verbose: true,
-  maxIterations: 4,
-  handleParsingErrors: true,
-});
+    topK: 5,
+    maxIterations: 4,
+  });
+  agentExecutor.handleParsingErrors = true;
 
   return agentExecutor;
 }
