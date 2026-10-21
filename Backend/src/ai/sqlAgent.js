@@ -20,18 +20,30 @@ async function getAgent() {
   }
 
 
+  // const dataSource = new DataSource({
+  //   type: "postgres",
+  //   host: process.env.DB_HOST,
+  //   port: Number(process.env.DB_PORT || 5432),
+  //   username: process.env.DB_USER,
+  //   password: process.env.DB_PASSWORD,
+  //   database: process.env.DB_NAME,
+  //   ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : undefined,
+  // });
   const dataSource = new DataSource({
-    type: "postgres",
-    host: process.env.DB_HOST,
-    port: Number(process.env.DB_PORT || 5432),
-    username: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
-    ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : undefined,
-  });
-
+  type: "postgres",
+  url: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false,
+  },
+});
   await dataSource.initialize();
+  console.log("Database connected successfully");
 
+const result = await dataSource.query(
+  "SELECT current_database(), current_user"
+);
+
+console.log(result);
   const db = await SqlDatabase.fromDataSourceParams({
     appDataSource: dataSource,
 
@@ -59,14 +71,18 @@ async function getAgent() {
 
 
 async function askDatabase(question) {
+  try {
+    const agent = await getAgent();
 
-  const agent = await getAgent();
+    const result = await agent.invoke({
+      input: question,
+    });
 
-  const result = await agent.invoke({
-    input: question,
-  });
-
-  return result.output;
+    return result.output;
+  } catch (error) {
+    console.error("SQL Agent Error:", error.message);
+    throw error;
+  }
 }
 
 
